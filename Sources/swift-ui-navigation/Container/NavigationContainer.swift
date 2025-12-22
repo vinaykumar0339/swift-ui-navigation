@@ -8,9 +8,7 @@
 import Foundation
 import SwiftUI
 
-public struct StackNavigator<R: Route, Content: View>: View {
-    
-    @StateObject private var router = Router<R>()
+public struct NavigationContainer<Content: View>: View {
     private let content: Content
     
     public init(@ViewBuilder content: () -> Content) {
@@ -18,10 +16,6 @@ public struct StackNavigator<R: Route, Content: View>: View {
     }
     
     public var body: some View {
-        NavigationStack(path: $router.path) {
-            content
-                .environmentObject(router)
-        }
+        content
     }
-    
 }
