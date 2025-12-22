@@ -15,8 +15,7 @@ public struct ScreenConfiguration<Screen: ScreenProtocol> {
     let builder: (Route<Screen>, Navigation<Screen>) -> AnyView
 }
 
-public struct ScreenProps<Screen: ScreenProtocol, Params> {
+public struct ScreenProps<Screen: ScreenProtocol> {
     public let navigation: Navigation<Screen>
     public let route: Route<Screen>
-    public let params: Params
 }

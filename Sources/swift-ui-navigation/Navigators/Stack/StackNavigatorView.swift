@@ -16,11 +16,13 @@ internal struct StackNavigatorView<Screen: ScreenProtocol>: View {
     
     var body: some View {
         NavigationStack(path: $navigation.path) {
-            renderScreen(for: Route(name: initialRoute, params: EmptyParams()))
+            renderScreen(for: Route<Screen>(name: initialRoute, params: EmptyParams()))
                 .environmentObject(navigation)
+                .environment(\.currentRoute, Route(name: initialRoute, params: EmptyParams()))
                 .navigationDestination(for: Route<Screen>.self) { route in
                     renderScreen(for: route)
                         .environmentObject(navigation)
+                        .environment(\.currentRoute, route)
                 }
         }
     }
@@ -28,15 +30,12 @@ internal struct StackNavigatorView<Screen: ScreenProtocol>: View {
     @ViewBuilder
     private func renderScreen(for route: Route<Screen>) -> some View {
         if let screen = screens.first(where: { $0.name == route.name }) {
-            let options = navigation.currentOptions ?? screen.options
+            let options = screen.options
             
             screen.builder(route, navigation)
                 .navigationTitle(options.title ?? "")
                 .navigationBarTitleDisplayMode(.large)
                 .toolbar(options.headerShown ? .visible : .hidden, for: .navigationBar)
-                .onAppear {
-                    navigation.currentOptions = nil
-                }
         } else {
             Text("Screen '\(String(describing: route.name))' not found")
                 .foregroundColor(.red)

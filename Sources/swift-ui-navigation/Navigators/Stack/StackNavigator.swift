@@ -12,7 +12,9 @@ public func createNativeStackNavigator<Screen: ScreenProtocol>(_: Screen.Type) -
     NativeStackNavigator<Screen>()
 }
 
-public struct NativeStackNavigator<Screen: ScreenProtocol> {
+public struct NativeStackNavigator<
+    Screen: ScreenProtocol
+> {
     
     @MainActor
     public func Navigator(
@@ -26,30 +28,30 @@ public struct NativeStackNavigator<Screen: ScreenProtocol> {
     public func Screen<Content: View>(
         name: Screen,
         options: ScreenOptions = .default,
-        @ViewBuilder component: @escaping (ScreenProps<Screen, EmptyParams>) -> Content
+        @ViewBuilder component: @escaping (ScreenProps<Screen>) -> Content
     ) -> ScreenConfiguration<Screen> {
         ScreenConfiguration(
             name: name,
             options: options,
             builder: { route, navigation in
-                let props = ScreenProps(navigation: navigation, route: route, params: EmptyParams())
+                let props = ScreenProps(navigation: navigation, route: route)
                 return AnyView(component(props))
             }
         )
     }
     
     /// Register screen with params
-    public func Screen<Content: View, Params: Codable>(
+    public func Screen<Content: View, Params: RouteParams>(
         name: Screen,
         options: ScreenOptions = .default,
-        @ViewBuilder component: @escaping (ScreenProps<Screen, Params>) -> Content
+        params: Params.Type = EmptyParams.self,
+        @ViewBuilder component: @escaping (ScreenProps<Screen>) -> Content
     ) -> ScreenConfiguration<Screen> {
         ScreenConfiguration(
             name: name,
             options: options,
             builder: { route, navigation in
-                let params: Params = route.getParams() ?? EmptyParams() as! Params
-                let props = ScreenProps(navigation: navigation, route: route, params: params)
+                let props = ScreenProps(navigation: navigation, route: route)
                 return AnyView(component(props))
             }
         )

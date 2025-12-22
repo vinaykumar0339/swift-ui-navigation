@@ -9,13 +9,14 @@ import Foundation
 import SwiftUI
 
 @MainActor
-public final class Navigation<Screen: ScreenProtocol>: ObservableObject {
+public final class Navigation<
+    Screen: ScreenProtocol
+>: ObservableObject {
     @Published internal var path: [Route<Screen>] = []
-    @Published public var currentOptions: ScreenOptions?
     
     public init() {}
     
-    public func navigate<Params>(_ name: Screen, params: Params) where Params: Codable & Hashable {
+    public func navigate<Params: RouteParams>(_ name: Screen, params: Params) {
         let route = Route(name: name, params: params)
         path.append(route)
     }
@@ -30,10 +31,10 @@ public final class Navigation<Screen: ScreenProtocol>: ObservableObject {
         path.removeLast()
     }
     
-    public func replace<Params>(
+    public func replace<Params: RouteParams>(
         _ name: Screen,
         params: Params
-    ) where Params: Codable & Hashable {
+    ) where Params: RouteParams {
         goBack()
         navigate(name, params: params)
     }
@@ -55,12 +56,24 @@ public final class Navigation<Screen: ScreenProtocol>: ObservableObject {
         !path.isEmpty
     }
     
-    public func setParams<Params>(_ params: Params) where Params: Codable & Hashable {
-        guard !path.isEmpty else { return }
-        path[path.count - 1].updateParams(params)
+    public func setParams<Params: RouteParams>(_ params: Params) {
+        guard let last = path.last else { return }
+
+        let updated = Route(
+            name: last.name,
+            params: params,
+            options: last.getOptions()
+        )
+
+        path[path.count - 1] = updated
     }
     
     public func setOptions(_ options: ScreenOptions) {
-        currentOptions = options
+        guard var last = path.last else { return }
+        
+        last.updateOptions(options)
+        last.id = UUID() // to tell the navigation stack that this new screen options.
+        
+        path[path.count - 1] = last
     }
 }

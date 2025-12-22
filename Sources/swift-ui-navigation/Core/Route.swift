@@ -10,26 +10,38 @@ import Foundation
 public struct Route<
     Screen: ScreenProtocol
 >: Hashable {
-    public let id: UUID
+    public var id: UUID
     public let name: Screen
     private var params: Data?
+    private var options: ScreenOptions?
     
-    public init<Params: Codable & Hashable>(
+    public init<Params: RouteParams>(
+        id: UUID = UUID(),
         name: Screen,
-        params: Params
+        params: Params? = nil,
+        options: ScreenOptions? = nil
     ) {
-        self.id = UUID()
+        self.id = id
         self.name = name
         self.params = try? JSONEncoder().encode(params)
+        self.options = options
     }
     
-    public func getParams<Params: Codable>() -> Params? {
+    public func getParams<Params: RouteParams>() -> Params? {
         guard let data = params else { return nil }
         return try? JSONDecoder().decode(Params.self, from: data)
     }
     
-    mutating func updateParams<Params: Codable & Hashable>(_ params: Params) {
+    mutating func updateParams<Params: RouteParams>(_ params: Params) {
         self.params = try? JSONEncoder().encode(params)
+    }
+    
+    public func getOptions() -> ScreenOptions? {
+        options
+    }
+    
+    mutating func updateOptions(_ options: ScreenOptions) {
+        self.options = options
     }
     
     public func hash(into hasher: inout Hasher) {
@@ -43,6 +55,8 @@ public struct Route<
     
 }
 
-public struct EmptyParams: Codable, Hashable {}
+public protocol RouteParams: Codable & Hashable {}
+
+public struct EmptyParams: RouteParams {}
 
 public protocol ScreenProtocol: Hashable, CaseIterable {}
