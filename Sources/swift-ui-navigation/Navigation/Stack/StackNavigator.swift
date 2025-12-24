@@ -19,24 +19,40 @@ public func createStackNavigator<Routes: Route>(
 @resultBuilder
 public struct StackBuilder {
     
-    public static func buildExpression<Routes: Route>(_ expression: StackScreen<Routes>) -> StackScreen<Routes> {
-        return StackScreen(expression.route, expression.options, content: expression.build)
+    public static func buildExpression<Routes: Route>(
+        _ expression: StackScreen<Routes>
+    ) -> [StackScreen<Routes>] {
+        [expression]
     }
-    
-    public static func buildBlock<Routes: Route>(_ components: StackScreen<Routes>...) -> [StackScreen<Routes>] {
-        components
+
+    public static func buildBlock<Routes: Route>(
+        _ components: [StackScreen<Routes>]...
+    ) -> [StackScreen<Routes>] {
+        components.flatMap { $0 }
     }
-    
-    public static func buildOptional<Routes: Route>(_ component: [StackScreen<Routes>]?) -> [StackScreen<Routes>] {
+
+    public static func buildOptional<Routes: Route>(
+        _ component: [StackScreen<Routes>]?
+    ) -> [StackScreen<Routes>] {
         component ?? []
     }
-    
-    public static func buildEither<Routes: Route>(first component: [StackScreen<Routes>]) -> [StackScreen<Routes>] {
+
+    public static func buildEither<Routes: Route>(
+        first component: [StackScreen<Routes>]
+    ) -> [StackScreen<Routes>] {
         component
     }
-    
-    public static func buildEither<Routes: Route>(second component: [StackScreen<Routes>]) -> [StackScreen<Routes>] {
+
+    public static func buildEither<Routes: Route>(
+        second component: [StackScreen<Routes>]
+    ) -> [StackScreen<Routes>] {
         component
+    }
+
+    public static func buildArray<Routes: Route>(
+        _ components: [[StackScreen<Routes>]]
+    ) -> [StackScreen<Routes>] {
+        components.flatMap { $0 }
     }
     
 }
@@ -71,7 +87,7 @@ public struct StackNavigator<Routes: Route>: View {
                 .navigationBarTitleDisplayMode(.large)
                 
         } else {
-            Text("Screen '\(String(describing: type(of: route))) not found")
+            Text("Screen '\(String(describing: route))' not found")
                 .foregroundStyle(.red)
         }
     }

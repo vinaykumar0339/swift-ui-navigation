@@ -20,7 +20,7 @@ public protocol Route: Hashable {
 }
 
 /// Type-erased Any Route to use this in the Navigation State.
-public struct AnyRoute: Route {
+public struct AnyRoute: Route, CustomStringConvertible {
     
     public let name: RouteName
     public let params: any RouteParams
@@ -36,6 +36,10 @@ public struct AnyRoute: Route {
     
     public static func == (lhs: AnyRoute, rhs: AnyRoute) -> Bool {
         lhs.name == rhs.name
+    }
+    
+    public var description: String {
+        return "Route(name: \(name), params: \(String(describing: params))"
     }
     
 }
