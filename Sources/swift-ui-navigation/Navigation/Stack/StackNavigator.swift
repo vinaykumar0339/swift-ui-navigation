@@ -55,15 +55,15 @@ public struct StackNavigator<Routes: Route>: View {
         NavigationStack(path: $navigation.routes) {
             renderScreen(for: initialRoute)
                 .navigationDestination(for: AnyRoute.self) { route in
-                    renderScreen(for: route as! Routes)
+                    renderScreen(for: route)
                 }
         }
     }
     
     @ViewBuilder
-    private func renderScreen(for route: Routes) -> some View {
+    private func renderScreen(for route: any Route) -> some View {
         // Make sure route name are unique. Write this in the Documentation
-        if let screen = screens.first(where: { $0.route == route }) {
+        if let screen = screens.first(where: { $0.route.name == route.name }) {
             let options = screen.options ?? screenOptions // TODO: Will use to add later things like title etc.
             
             screen.build(appNavigation, route)
