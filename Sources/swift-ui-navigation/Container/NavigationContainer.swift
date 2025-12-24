@@ -6,3 +6,35 @@
 //
 
 import Foundation
+import SwiftUI
+
+public struct NavigationKey: @preconcurrency EnvironmentKey {
+    @MainActor public static let defaultValue: AnyNavigation = .init()
+}
+
+public extension EnvironmentValues {
+    var navigation: AnyNavigation {
+        get {
+            self[NavigationKey.self]
+        } set {
+            self[NavigationKey.self] = newValue
+        }
+    }
+}
+
+public struct NavigationContainer<Content: View>: View {
+    
+    @StateObject var navigation = AnyNavigation()
+    
+    private let content: Content
+    
+    public init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+    
+    public var body: some View {
+        content
+            .environmentObject(navigation)
+            .environment(\.navigation, navigation)
+    }
+}
