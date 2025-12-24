@@ -9,4 +9,8 @@ import Foundation
 
 public struct ScreenOptions {
     let title: String? // fallback to the route name itself
+    
+    public init(title: String?) {
+        self.title = title
+    }
 }

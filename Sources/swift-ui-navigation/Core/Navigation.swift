@@ -13,7 +13,7 @@ import SwiftUI
 public class AnyNavigation: ObservableObject {
     @Published var routes = [AnyRoute]()
     
-    public func navigate<R: Route>(to destination: R) {
+    public func navigate<Routes: Route>(to destination: Routes) {
         let route = AnyRoute(destination)
         routes.append(route)
     }
@@ -38,10 +38,10 @@ public class AnyNavigation: ObservableObject {
 
 @MainActor
 @propertyWrapper
-public struct AppNavigation<R: Route>: DynamicProperty {
+public struct AppNavigation<Routes: Route>: DynamicProperty {
     @EnvironmentObject private var navigation: AnyNavigation
 
-    public var wrappedValue: Navigation<R> {
+    public var wrappedValue: Navigation<Routes> {
         Navigation(navigation)
     }
 
@@ -49,14 +49,14 @@ public struct AppNavigation<R: Route>: DynamicProperty {
 }
 
 @MainActor
-public struct Navigation<R: Route> {
+public struct Navigation<Routes: Route> {
     private let navigation: AnyNavigation
 
     init(_ navigation: AnyNavigation) {
         self.navigation = navigation
     }
 
-    public func navigate(to route: R) {
+    public func navigate(to route: Routes) {
         navigation.navigate(to: route)
     }
     

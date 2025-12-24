@@ -20,7 +20,7 @@ public func createStackNavigator<Routes: Route>(
 public struct StackBuilder {
     
     public static func buildExpression<Routes: Route>(_ expression: StackScreen<Routes>) -> StackScreen<Routes> {
-        return StackScreen(expression.route, content: expression.build)
+        return StackScreen(expression.route, expression.options, content: expression.build)
     }
     
     public static func buildBlock<Routes: Route>(_ components: StackScreen<Routes>...) -> [StackScreen<Routes>] {
@@ -55,15 +55,15 @@ public struct StackNavigator<Routes: Route>: View {
         NavigationStack(path: $navigation.routes) {
             renderScreen(for: initialRoute)
                 .navigationDestination(for: AnyRoute.self) { route in
-                    renderScreen(for: route)
+                    renderScreen(for: route as! Routes)
                 }
         }
     }
     
     @ViewBuilder
-    private func renderScreen(for route: any Route) -> some View {
+    private func renderScreen(for route: Routes) -> some View {
         // Make sure route name are unique. Write this in the Documentation
-        if let screen = screens.first(where: { $0.route.name == route.name }) {
+        if let screen = screens.first(where: { $0.route == route }) {
             let options = screen.options ?? screenOptions // TODO: Will use to add later things like title etc.
             
             screen.build(appNavigation, route)
