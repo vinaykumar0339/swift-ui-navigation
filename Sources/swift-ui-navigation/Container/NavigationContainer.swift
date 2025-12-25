@@ -8,11 +8,11 @@
 import Foundation
 import SwiftUI
 
-public struct NavigationKey: @preconcurrency EnvironmentKey {
-    @MainActor public static let defaultValue: AnyNavigation = .init()
+struct NavigationKey: @preconcurrency EnvironmentKey {
+    @MainActor static let defaultValue: AnyNavigation = .init()
 }
 
-public extension EnvironmentValues {
+extension EnvironmentValues {
     var navigation: AnyNavigation {
         get {
             self[NavigationKey.self]
@@ -24,8 +24,6 @@ public extension EnvironmentValues {
 
 public struct NavigationContainer<Content: View>: View {
     
-    @StateObject var navigation = AnyNavigation()
-    
     private let content: Content
     
     public init(@ViewBuilder content: () -> Content) {
@@ -34,7 +32,5 @@ public struct NavigationContainer<Content: View>: View {
     
     public var body: some View {
         content
-            .environmentObject(navigation)
-            .environment(\.navigation, navigation)
     }
 }

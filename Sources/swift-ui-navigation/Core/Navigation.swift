@@ -9,8 +9,10 @@
 import Foundation
 import SwiftUI
 
+/// Type-erased navigation which is used in the Environement(\.navigation) to access the navigation
+/// EnvironmentKey is not supported the generic types not like EnvironemtObject
 @MainActor
-public class AnyNavigation: ObservableObject {
+class AnyNavigation: ObservableObject {
     @Published var routes = [AnyRoute]()
     
     public func navigate<Routes: Route>(to destination: Routes) {
