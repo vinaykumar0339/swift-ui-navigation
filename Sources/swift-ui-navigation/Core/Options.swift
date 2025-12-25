@@ -10,47 +10,40 @@ import SwiftUI
 
 public struct ScreenOptions {
     let title: String? // fallback to the route name itself
+    let hideHeaderTitle: Bool?
     let headerShown: Bool?
     let headerBackButtonDisplayMode: NavigationBarItem.TitleDisplayMode?
     let headerBackButtonHidden: Bool?
     
     // header button options
-    let headerLeftButtonOption: HeaderLeftButtonOption?
+    let headerLeftView: HeaderLeftView?
+    let headerRightView: HeaderRightView?
+    let headerStyle: HeaderStyle?
+
     
-    public init(
+    public init (
         title: String? = nil,
+        hideHeaderTitle: Bool? = false,
         headerShown: Bool? = true,
         headerBackButtonDisplayMode: NavigationBarItem.TitleDisplayMode? = .inline,
         headerBackButtonHidden: Bool? = false,
         
-        headerLeftButtonOption: HeaderLeftButtonOption? = nil
+        headerLeftView: HeaderLeftView? = nil,
+        headerRightView: HeaderRightView? = nil,
+        headerStyle: HeaderStyle? = nil
     ) {
         self.title = title
+        self.hideHeaderTitle = hideHeaderTitle
         self.headerShown = headerShown
         self.headerBackButtonDisplayMode = headerBackButtonDisplayMode
         self.headerBackButtonHidden = headerBackButtonHidden
         
-        self.headerLeftButtonOption = headerLeftButtonOption
+        self.headerLeftView = headerLeftView
+        self.headerRightView = headerRightView
+        self.headerStyle = headerStyle
+        
     }
 }
 
-public struct HeaderLeftButtonBasicOption {
-    let icon: Image?
-    let title: String?
-    let subtitle: String?
-    let action: (() -> Void)?
-    
-    init(icon: Image? = nil, title: String? = nil, subtitle: String? = nil, action: (() -> Void)? = nil) {
-        self.icon = icon
-        self.title = title
-        self.subtitle = subtitle
-        self.action = action
-    }
-}
 
-public enum HeaderLeftButtonOption {
-    case none
-    case basic(HeaderLeftButtonBasicOption)
-    case custom(() -> AnyView)
 
-}
