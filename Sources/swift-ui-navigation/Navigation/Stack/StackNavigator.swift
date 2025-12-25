@@ -67,14 +67,76 @@ public struct StackNavigator<Routes: Route>: View {
     let screenOptions: ScreenOptions?
     let screens: [StackScreen<Routes>]
     
+    @ToolbarContentBuilder
+    private func toolbarContent() -> some ToolbarContent {
+        
+        if let topRoute = navigation.routes.last,
+           let screen = screens.first(where: { $0.route.name == topRoute.name }),
+           let option = screen.options?.headerLeftButtonOption {
+            ToolbarItem(placement: .topBarLeading) {
+                headerLeftToolbarContent(option)
+            }
+        } else if let screen = screens.first(where: { $0.route.name == initialRoute.name }), // check for initial route
+           let option = screen.options?.headerLeftButtonOption {
+            ToolbarItem(placement: .topBarLeading) {
+                headerLeftToolbarContent(option)
+            }
+        }
+        
+    }
+
+    
     public var body: some View {
         NavigationStack(path: $navigation.routes) {
             renderScreen(for: initialRoute)
+                .toolbar {
+                    toolbarContent()
+                }
                 .navigationDestination(for: AnyRoute.self) { route in
                     renderScreen(for: route)
+                    .toolbar {
+                        toolbarContent()
+                    }
                 }
         }
     }
+    
+    @ViewBuilder
+    private func headerLeftToolbarContent(
+        _ option: HeaderLeftButtonOption
+    ) -> some View {
+        switch option {
+        case .none:
+            EmptyView()
+
+        case .basic(let opt):
+            HStack(alignment: .firstTextBaseline) {
+                opt.icon
+                    .foregroundColor(.primary)
+                VStack(alignment: .leading) {
+                    if let title = opt.title {
+                        Text(title)
+                            .foregroundStyle(.primary)
+                    }
+                    if let subtitle = opt.subtitle {
+                        Text(subtitle)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .onTapGesture {
+                if let action = opt.action {
+                    action()
+                }
+                // if not provided the action befault should be go back.
+                navigation.goBack()
+            }
+
+        case .custom(let builder):
+            builder()
+        }
+    }
+
     
     @ViewBuilder
     private func renderScreen(for route: any Route) -> some View {
@@ -86,11 +148,15 @@ public struct StackNavigator<Routes: Route>: View {
             let headerBackButtonDisplayMode = screen.options?.headerBackButtonDisplayMode ?? screenOptions?.headerBackButtonDisplayMode ?? .inline
             let headerBackButtonHidden = screen.options?.headerBackButtonHidden ?? screenOptions?.headerBackButtonHidden ?? false
             
+            let headerLeftButtonOption = screen.options?.headerLeftButtonOption ?? screenOptions?.headerLeftButtonOption ?? nil
+            
+            let hasCustomBackButton = headerLeftButtonOption != nil
+            
             screen.build(appNavigation, route)
                 .navigationTitle(title)
                 .navigationBarTitleDisplayMode(headerBackButtonDisplayMode)
                 .toolbar(headerShown ? .visible : .hidden, for: .navigationBar)
-                .navigationBarBackButtonHidden(headerBackButtonHidden)
+                .navigationBarBackButtonHidden(headerBackButtonHidden || hasCustomBackButton)
                 
         } else {
             Text("Screen '\(String(describing: route))' not found")
