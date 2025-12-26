@@ -40,7 +40,7 @@ public struct TabScreen<Routes: Route> {
     
     public init<Content: View>(
         _ route: Routes,
-        _ options: ((TabNavigation<Routes>, Routes) -> TabOptions?)? = nil,
+        _ options: ((TabNavigation<Routes>, Routes, _ isRouteSelected: Bool) -> TabOptions?)? = nil,
         @ViewBuilder content: @escaping (TabNavigation<Routes>, any Route) -> Content
     ) {
         self.route = route
@@ -50,8 +50,8 @@ public struct TabScreen<Routes: Route> {
         }
     }
     
-    func getOptions(_ navigation: TabNavigation<Routes>) -> TabOptions? {
-        optionsProvider?.resolve(navigation: navigation, route: route)
+    func getOptions(_ navigation: TabNavigation<Routes>, isRouteSelected: Bool) -> TabOptions? {
+        optionsProvider?.resolve(navigation: navigation, route: route, isRouteSelected)
     }
     
 }
@@ -59,18 +59,19 @@ public struct TabScreen<Routes: Route> {
 struct TabScreenView<Routes: Route>: View {
     
     let tabScreen: TabScreen<Routes>
-    let tabOptions: TabOptions?
-    let tabNavigation: TabNavigation<Routes>
+    var tabOptions: TabOptions?
+    var tabNavigation: TabNavigation<Routes>
     
     @EnvironmentObject private var anyTabNavigation: AnyTabNavigation
     
     init(
         tabScreen: TabScreen<Routes>,
         tabOptions: TabOptions? = nil,
-        tabNavigation: TabNavigation<Routes>
+        tabNavigation: TabNavigation<Routes>,
+        isRouteSelected: Bool = false
     ) {
         self.tabScreen = tabScreen
-        self.tabOptions = tabScreen.getOptions(tabNavigation) ?? tabOptions
+        self.tabOptions = tabScreen.getOptions(tabNavigation, isRouteSelected: isRouteSelected) ?? tabOptions
         self.tabNavigation = tabNavigation
     }
     

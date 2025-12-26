@@ -51,7 +51,7 @@ public struct TabNavigator<Routes: Route>: View {
     
     init(
         initialRoute: Routes,
-        tabOptions: ((TabNavigation<Routes>, Routes) -> TabOptions?)? = nil,
+        tabOptions: ((TabNavigation<Routes>, Routes, _ isRouteSelected: Bool) -> TabOptions?)? = nil,
         tabScreens: [TabScreen<Routes>]
     ) {
         
@@ -65,23 +65,25 @@ public struct TabNavigator<Routes: Route>: View {
         self.tabScreens = tabScreens
     }
     
-    private func getTabOptions(_ route: Routes) -> TabOptions? {
+    private func getTabOptions(_ route: Routes, _ isRouteSelected: Bool) -> TabOptions? {
         guard let provider = tabOptionsProvider else { return nil }
         switch provider {
         case .constant(let tabOptions):
             return tabOptions
         case .dynamic(let closure):
-            return closure(tabNavigation, route)
+            return closure(tabNavigation, route, isRouteSelected)
         }
     }
     
     public var body: some View {
         TabView(selection: $anyTabNavigation.selectedRoute) {
             ForEach(Array(tabScreens.enumerated()), id: \.offset) { _, tab in
+                let isRouteSelected = tab.route.name == anyTabNavigation.selectedRoute?.name
                 TabScreenView(
                     tabScreen: tab,
-                    tabOptions: getTabOptions(tab.route),
-                    tabNavigation: tabNavigation
+                    tabOptions: getTabOptions(tab.route, isRouteSelected),
+                    tabNavigation: tabNavigation,
+                    isRouteSelected: isRouteSelected
                 )
             }
         }

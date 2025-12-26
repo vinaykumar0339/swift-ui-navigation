@@ -23,17 +23,18 @@ public struct TabOptions {
 
 enum TabOptionsProvider<Routes: Route> {
     case constant(TabOptions)
-    case dynamic((TabNavigation<Routes>, Routes) -> TabOptions?)
+    case dynamic((TabNavigation<Routes>, Routes, _ isRouteSelected: Bool) -> TabOptions?)
     
     func resolve(
         navigation: TabNavigation<Routes>,
-        route: Routes
+        route: Routes,
+        _ isRouteSelected: Bool
     ) -> TabOptions? {
         switch self {
         case .constant(let options):
             return options
         case .dynamic(let closure):
-            return closure(navigation, route)
+            return closure(navigation, route, isRouteSelected)
         }
     }
 }
