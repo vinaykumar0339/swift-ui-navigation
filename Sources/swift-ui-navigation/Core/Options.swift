@@ -45,5 +45,21 @@ public struct ScreenOptions {
     }
 }
 
-
+@MainActor
+enum ScreenOptionsProvider<Routes: Route> {
+    case constant(ScreenOptions)
+    case dynamic((Navigation<Routes>, Routes) -> ScreenOptions?)
+    
+    func resolve(
+        navigation: Navigation<Routes>,
+        _ route: Routes
+    ) -> ScreenOptions? {
+        switch self {
+        case .constant(let options):
+            return options
+        case .dynamic(let closure):
+            return closure(navigation, route)
+        }
+    }
+}
 

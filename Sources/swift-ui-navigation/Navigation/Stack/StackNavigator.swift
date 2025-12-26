@@ -9,75 +9,62 @@ import Foundation
 import SwiftUI
 
 @MainActor
-public func createStackNavigator<Routes: Route>(
-    _ routes: Routes.Type
-) -> StackNavigatorFactory<Routes> {
-    return StackNavigatorFactory<Routes>()
-}
-
-@MainActor
-@resultBuilder
-public struct StackBuilder {
-    
-    public static func buildExpression<Routes: Route>(
-        _ expression: StackScreen<Routes>
-    ) -> [StackScreen<Routes>] {
-        [expression]
-    }
-
-    public static func buildBlock<Routes: Route>(
-        _ components: [StackScreen<Routes>]...
-    ) -> [StackScreen<Routes>] {
-        components.flatMap { $0 }
-    }
-
-    public static func buildOptional<Routes: Route>(
-        _ component: [StackScreen<Routes>]?
-    ) -> [StackScreen<Routes>] {
-        component ?? []
-    }
-
-    public static func buildEither<Routes: Route>(
-        first component: [StackScreen<Routes>]
-    ) -> [StackScreen<Routes>] {
-        component
-    }
-
-    public static func buildEither<Routes: Route>(
-        second component: [StackScreen<Routes>]
-    ) -> [StackScreen<Routes>] {
-        component
-    }
-
-    public static func buildArray<Routes: Route>(
-        _ components: [[StackScreen<Routes>]]
-    ) -> [StackScreen<Routes>] {
-        components.flatMap { $0 }
-    }
-    
-}
-
-@MainActor
 public struct StackNavigator<Routes: Route>: View {
     
     @StateObject private var anyNavigation: AnyNavigation
     private var navigation: Navigation<Routes>
     
     var initialRoute: Routes
-    var screenOptions: ScreenOptions?
+    var screenOptionsProvider: ScreenOptionsProvider<Routes>?
     var screens: [StackScreen<Routes>]
     
     init(
         initialRoute: Routes,
-        screenOptions: ScreenOptions?,
         screens: [StackScreen<Routes>]
     ) {
         let anyNavigation = AnyNavigation()
         _anyNavigation = StateObject(wrappedValue: anyNavigation)
         self.navigation = Navigation<Routes>(anyNavigation)
         self.initialRoute = initialRoute
-        self.screenOptions = screenOptions
+        self.screenOptionsProvider = nil
         self.screens = screens
+    }
+    
+    init(
+        initialRoute: Routes,
+        screenOptions: ScreenOptions? = nil,
+        screens: [StackScreen<Routes>]
+    ) {
+        let anyNavigation = AnyNavigation()
+        _anyNavigation = StateObject(wrappedValue: anyNavigation)
+        self.navigation = Navigation<Routes>(anyNavigation)
+        self.initialRoute = initialRoute
+        self.screenOptionsProvider = screenOptions.map({ .constant($0) })
+        self.screens = screens
+    }
+    
+    init(
+        initialRoute: Routes,
+        screenOptions: ((Navigation<Routes>, Routes) -> ScreenOptions?)? = nil,
+        screens: [StackScreen<Routes>]
+    ) {
+        let anyNavigation = AnyNavigation()
+        _anyNavigation = StateObject(wrappedValue: anyNavigation)
+        self.navigation = Navigation<Routes>(anyNavigation)
+        self.initialRoute = initialRoute
+        self.screenOptionsProvider = screenOptions.map({ .dynamic($0) })
+        self.screens = screens
+    }
+    
+    
+    private func getScreenOptions(_ route: Routes) -> ScreenOptions? {
+        guard let provider = screenOptionsProvider else { return nil }
+        switch provider {
+        case .constant(let options):
+            return options
+        case .dynamic(let closure):
+            return closure(navigation, route)
+        }
     }
     
     @ToolbarContentBuilder
@@ -85,14 +72,18 @@ public struct StackNavigator<Routes: Route>: View {
         
         if let topRoute = anyNavigation.routes.last,
            let screen = screens.first(where: { $0.route.name == topRoute.name }),
-           let option = screen.options?.headerLeftView ?? screenOptions?.headerLeftView {
+           let option = screen.getOptions(navigation) ?? getScreenOptions(screen.route),
+           let headerLeftView = option.headerLeftView
+        {
             ToolbarItem(placement: .topBarLeading) {
-                headerLeftToolbarContent(option)
+                headerLeftToolbarContent(headerLeftView)
             }
         } else if let screen = screens.first(where: { $0.route.name == initialRoute.name }), // check for initial route
-           let option = screen.options?.headerLeftView ?? screenOptions?.headerLeftView {
+                  let option = screen.getOptions(navigation) ?? getScreenOptions(screen.route),
+                  let headerLeftView = option.headerLeftView
+        {
             ToolbarItem(placement: .topBarLeading) {
-                headerLeftToolbarContent(option)
+                headerLeftToolbarContent(headerLeftView)
             }
         }
         
@@ -102,14 +93,18 @@ public struct StackNavigator<Routes: Route>: View {
     private func toolbarRightViewContent() -> some ToolbarContent {
         if let topRoute = anyNavigation.routes.last,
            let screen = screens.first(where: { $0.route.name == topRoute.name }),
-           let option = screen.options?.headerRightView ?? screenOptions?.headerRightView {
+           let option = screen.getOptions(navigation) ?? getScreenOptions(screen.route),
+           let headerRightView = option.headerRightView
+        {
             ToolbarItem(placement: .topBarTrailing) {
-                headerRightToolbarContent(option)
+                headerRightToolbarContent(headerRightView)
             }
         } else if let screen = screens.first(where: { $0.route.name == initialRoute.name }), // check for initial route
-                  let option = screen.options?.headerRightView ?? screenOptions?.headerRightView {
+                  let option = screen.getOptions(navigation) ?? getScreenOptions(screen.route),
+                  let headerRightView = option.headerRightView
+        {
             ToolbarItem(placement: .topBarTrailing) {
-                headerRightToolbarContent(option)
+                headerRightToolbarContent(headerRightView)
             }
         }
     }
@@ -196,16 +191,19 @@ public struct StackNavigator<Routes: Route>: View {
         // Make sure route name are unique. Write this in the Documentation
         if let screen = screens.first(where: { $0.route.name == route.name }) {
             
-            let title = screen.options?.title ?? screenOptions?.title ?? screen.route.name
-            let hideHeaderTitle = screen.options?.hideHeaderTitle ?? screenOptions?.hideHeaderTitle ?? false
-            let headerShown = screen.options?.headerShown ?? screenOptions?.headerShown ?? true
-            let headerBackButtonDisplayMode = screen.options?.headerBackButtonDisplayMode ?? screenOptions?.headerBackButtonDisplayMode ?? .inline
-            let headerBackButtonHidden = screen.options?.headerBackButtonHidden ?? screenOptions?.headerBackButtonHidden ?? false
+            let options = screen.getOptions(navigation)
+            let screenOptions = getScreenOptions(screen.route)
             
-            let headerLeftView = screen.options?.headerLeftView ?? screenOptions?.headerLeftView ?? nil
+            let title = options?.title ?? screenOptions?.title ?? screen.route.name
+            let hideHeaderTitle = options?.hideHeaderTitle ?? screenOptions?.hideHeaderTitle ?? false
+            let headerShown = options?.headerShown ?? screenOptions?.headerShown ?? true
+            let headerBackButtonDisplayMode = options?.headerBackButtonDisplayMode ?? screenOptions?.headerBackButtonDisplayMode ?? .inline
+            let headerBackButtonHidden = options?.headerBackButtonHidden ?? screenOptions?.headerBackButtonHidden ?? false
+            
+            let headerLeftView = options?.headerLeftView ?? screenOptions?.headerLeftView ?? nil
             
             let hasCustomBackButton = headerLeftView != nil
-            let headerStyle = screen.options?.headerStyle ?? screenOptions?.headerStyle ?? HeaderStyle(
+            let headerStyle = options?.headerStyle ?? screenOptions?.headerStyle ?? HeaderStyle(
                     .clear,
                     isTranslucent: true
                 )
@@ -233,24 +231,5 @@ public struct StackNavigator<Routes: Route>: View {
     }
 }
 
-@MainActor
-public struct StackNavigatorFactory<Routes: Route> {
-    
-    public func Screen(
-        route: Routes,
-        options: ScreenOptions? = nil,
-        @ViewBuilder content: @escaping (Navigation<Routes>, any Route) -> some View
-    ) -> StackScreen<Routes> {
-        StackScreen(route, options, content: content)
-    }
-    
-    public func Navigator(
-        initialRoute: Routes,
-        screenOptions: ScreenOptions? = nil,
-        @StackBuilder content: () -> [StackScreen<Routes>]
-    ) -> StackNavigator<Routes> {
-        StackNavigator(initialRoute: initialRoute, screenOptions: screenOptions, screens: content())
-    }
-    
-}
+
 
