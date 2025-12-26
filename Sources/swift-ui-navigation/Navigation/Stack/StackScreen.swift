@@ -11,11 +11,9 @@ import SwiftUI
 @MainActor
 public struct StackScreen<Routes: Route> {
     
-    @AppNavigation<Routes> var navigation
-    
     let route: Routes
     let options: ScreenOptions?
-    let build: (Navigation<Routes>, any Route) -> AnyView // add (navigation, route) options
+    let build: (Navigation<Routes>, any Route) -> AnyView
     
     public init<Content: View>(
         _ route: Routes,
