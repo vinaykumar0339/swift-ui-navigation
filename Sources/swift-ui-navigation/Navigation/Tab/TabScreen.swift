@@ -12,6 +12,7 @@ import SwiftUI
 public struct TabScreen<Routes: Route> {
     
     let route: Routes
+    let optionsProvider: TabOptionsProvider<Routes>?
     let build: (TabNavigation<Routes>, any Route) -> AnyView
     
     public init<Content: View>(
@@ -19,9 +20,38 @@ public struct TabScreen<Routes: Route> {
         @ViewBuilder content: @escaping (TabNavigation<Routes>, any Route) -> Content
     ) {
         self.route = route
+        self.optionsProvider = nil
         self.build = { navigator, route in
             AnyView(content(navigator, route))
         }
+    }
+    
+    public init<Content: View>(
+        _ route: Routes,
+        _ options: TabOptions? = nil,
+        @ViewBuilder content: @escaping (TabNavigation<Routes>, any Route) -> Content
+    ) {
+        self.route = route
+        self.optionsProvider = options.map({.constant($0)})
+        self.build = { navigator, route in
+            AnyView(content(navigator, route))
+        }
+    }
+    
+    public init<Content: View>(
+        _ route: Routes,
+        _ options: ((TabNavigation<Routes>, Routes) -> TabOptions?)? = nil,
+        @ViewBuilder content: @escaping (TabNavigation<Routes>, any Route) -> Content
+    ) {
+        self.route = route
+        self.optionsProvider = options.map({ .dynamic($0) })
+        self.build = { navigator, route in
+            AnyView(content(navigator, route))
+        }
+    }
+    
+    func getOptions(_ navigation: TabNavigation<Routes>) -> TabOptions? {
+        optionsProvider?.resolve(navigation: navigation, route: route)
     }
     
 }
@@ -29,25 +59,34 @@ public struct TabScreen<Routes: Route> {
 struct TabScreenView<Routes: Route>: View {
     
     let tabScreen: TabScreen<Routes>
+    let tabOptions: TabOptions?
     let tabNavigation: TabNavigation<Routes>
     
     @EnvironmentObject private var anyTabNavigation: AnyTabNavigation
     
     init(
         tabScreen: TabScreen<Routes>,
+        tabOptions: TabOptions? = nil,
         tabNavigation: TabNavigation<Routes>
     ) {
         self.tabScreen = tabScreen
+        self.tabOptions = tabScreen.getOptions(tabNavigation) ?? tabOptions
         self.tabNavigation = tabNavigation
     }
     
     var body: some View {
+        
+        let tabBarStyle = tabOptions?.tabBarStyle ?? .init(.clear, isVisible: true)
+        
         tabScreen
             .build(tabNavigation, tabScreen.route)
             .tag(AnyRoute(tabScreen.route))
             .tabItem {
-                Text(tabScreen.route.name)
+                let tabItem = tabOptions?.tabItem ?? .item(.text(tabScreen.route.name))
+                return tabItem.resolve()
             }
+            .toolbarBackground(tabBarStyle.style, for: .tabBar)
+            .toolbarBackground(tabBarStyle.isVisible == true ? .visible : .hidden, for: .tabBar)
     }
     
 }

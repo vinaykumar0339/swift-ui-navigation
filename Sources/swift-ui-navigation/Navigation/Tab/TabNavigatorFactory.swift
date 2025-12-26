@@ -28,8 +28,54 @@ public struct TabNavigatorFactory<Routes: Route> {
         )
     }
     
+    public func Screen(
+        route: Routes,
+        options: TabOptions? = nil,
+        @ViewBuilder content: @escaping (TabNavigation<Routes>, any Route) -> some View
+    ) -> TabScreen<Routes> {
+        TabScreen(
+            route,
+            options,
+            content: content
+        )
+    }
+    
+    public func Screen(
+        route: Routes,
+        options: ((TabNavigation<Routes>, Routes) -> TabOptions?)? = nil,
+        @ViewBuilder content: @escaping (TabNavigation<Routes>, any Route) -> some View
+    ) -> TabScreen<Routes> {
+        TabScreen(
+            route,
+            options,
+            content: content
+        )
+    }
+    
     public func Navigator(
         initialRoute: Routes,
+        @TabBuilder content: () -> [TabScreen<Routes>]
+    ) -> TabNavigator<Routes> {
+        TabNavigator(
+            initialRoute: initialRoute,
+            tabScreens: content()
+        )
+    }
+    
+    public func Navigator(
+        initialRoute: Routes,
+        tabOptions: TabOptions? = nil,
+        @TabBuilder content: () -> [TabScreen<Routes>]
+    ) -> TabNavigator<Routes> {
+        TabNavigator(
+            initialRoute: initialRoute,
+            tabScreens: content()
+        )
+    }
+    
+    public func Navigator(
+        initialRoute: Routes,
+        tabOptions: ((TabNavigation<Routes>, Routes) -> TabOptions?)? = nil,
         @TabBuilder content: () -> [TabScreen<Routes>]
     ) -> TabNavigator<Routes> {
         TabNavigator(

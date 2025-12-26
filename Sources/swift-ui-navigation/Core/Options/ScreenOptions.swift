@@ -151,7 +151,7 @@ public class ScreenOptionsState: ObservableObject {
     
     public var headerStyle: HeaderStyle {
         get {
-            options.headerStyle ?? HeaderStyle(.clear, isTranslucent: true)
+            options.headerStyle ?? HeaderStyle(.clear, isVisible: true)
         } set {
             options.headerStyle = newValue
         }

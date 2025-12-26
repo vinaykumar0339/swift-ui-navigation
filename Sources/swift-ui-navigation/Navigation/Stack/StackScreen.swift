@@ -108,7 +108,7 @@ struct StackScreenView<Routes: Route>: View {
                 for: .navigationBar
             )
             .toolbarBackground(
-                screenOptionsState.headerStyle.isTranslucent == true ? .visible : .automatic,
+                screenOptionsState.headerStyle.isVisible == true ? .visible : .automatic,
                 for: .navigationBar
             )
             
