@@ -18,6 +18,8 @@ public struct StackNavigator<Routes: Route>: View {
     var screenOptionsProvider: ScreenOptionsProvider<Routes>?
     var screens: [StackScreen<Routes>]
     
+    @State private var screenOptions: ScreenOptions?
+    
     init(
         initialRoute: Routes,
         screens: [StackScreen<Routes>]
@@ -67,65 +69,6 @@ public struct StackNavigator<Routes: Route>: View {
         }
     }
     
-    @ToolbarContentBuilder
-    private func toolbarLeftViewContent() -> some ToolbarContent {
-        
-        if let topRoute = anyNavigation.routes.last,
-           let screen = screens.first(where: { $0.route.name == topRoute.name }),
-           let option = screen.getOptions(navigation) ?? getScreenOptions(screen.route),
-           let headerLeftView = option.headerLeftView
-        {
-            ToolbarItem(placement: .topBarLeading) {
-                headerLeftToolbarContent(headerLeftView)
-            }
-        } else if let screen = screens.first(where: { $0.route.name == initialRoute.name }), // check for initial route
-                  let option = screen.getOptions(navigation) ?? getScreenOptions(screen.route),
-                  let headerLeftView = option.headerLeftView
-        {
-            ToolbarItem(placement: .topBarLeading) {
-                headerLeftToolbarContent(headerLeftView)
-            }
-        }
-        
-    }
-    
-    @ToolbarContentBuilder
-    private func toolbarRightViewContent() -> some ToolbarContent {
-        if let topRoute = anyNavigation.routes.last,
-           let screen = screens.first(where: { $0.route.name == topRoute.name }),
-           let option = screen.getOptions(navigation) ?? getScreenOptions(screen.route),
-           let headerRightView = option.headerRightView
-        {
-            ToolbarItem(placement: .topBarTrailing) {
-                headerRightToolbarContent(headerRightView)
-            }
-        } else if let screen = screens.first(where: { $0.route.name == initialRoute.name }), // check for initial route
-                  let option = screen.getOptions(navigation) ?? getScreenOptions(screen.route),
-                  let headerRightView = option.headerRightView
-        {
-            ToolbarItem(placement: .topBarTrailing) {
-                headerRightToolbarContent(headerRightView)
-            }
-        }
-    }
-    
-    public var body: some View {
-        NavigationStack(path: $anyNavigation.routes) {
-            renderScreen(for: initialRoute)
-                .toolbar {
-                    toolbarLeftViewContent()
-                    toolbarRightViewContent()
-                }
-                .navigationDestination(for: AnyRoute.self) { route in
-                    renderScreen(for: route)
-                    .toolbar {
-                        toolbarLeftViewContent()
-                        toolbarRightViewContent()
-                    }
-                }
-        }
-    }
-    
     @ViewBuilder
     private func headerLeftToolbarContent(
         _ option: HeaderLeftView
@@ -133,14 +76,14 @@ public struct StackNavigator<Routes: Route>: View {
         switch option {
         case .none:
             EmptyView()
-
+            
         case .basic(let headerLeftBasicView):
             Button(action: {
                 if let action = headerLeftBasicView.action {
                     action()
                 }
                 // if not provided the action befault should be go back.
-                anyNavigation.goBack()
+                navigation.goBack()
             }, label: {
                 HStack(alignment: .firstTextBaseline) {
                     if let image = headerLeftBasicView.image {
@@ -186,47 +129,56 @@ public struct StackNavigator<Routes: Route>: View {
         }
     }
     
+    @ToolbarContentBuilder
+    private func toolbarLeftViewContent() -> some ToolbarContent {
+        if let headerLeftView = screenOptions?.headerLeftView {
+            ToolbarItem(placement: .topBarLeading) {
+                headerLeftToolbarContent(headerLeftView)
+            }
+        }
+    }
+    
+    @ToolbarContentBuilder
+    private func toolbarRightViewContent() -> some ToolbarContent {
+        if let headerRightView = screenOptions?.headerRightView {
+            ToolbarItem(placement: .topBarTrailing) {
+                headerRightToolbarContent(headerRightView)
+            }
+        }
+    }
+    
+    public var body: some View {
+        NavigationStack(path: $anyNavigation.routes) {
+            renderScreen(for: initialRoute)
+                .toolbar {
+                    toolbarLeftViewContent()
+                    toolbarRightViewContent()
+                }
+                .onReceive(anyNavigation.currentScreenOptionsState.$options, perform: { output in
+                    screenOptions = output
+                })
+                .navigationDestination(for: AnyRoute.self) { route in
+                    renderScreen(for: route)
+                    .toolbar {
+                        toolbarLeftViewContent()
+                        toolbarRightViewContent()
+                    }
+                }
+        }
+    }
+    
     @ViewBuilder
     private func renderScreen(for route: any Route) -> some View {
-        // Make sure route name are unique. Write this in the Documentation
         if let screen = screens.first(where: { $0.route.name == route.name }) {
-            
-            let options = screen.getOptions(navigation)
-            let screenOptions = getScreenOptions(screen.route)
-            
-            let title = options?.title ?? screenOptions?.title ?? screen.route.name
-            let hideHeaderTitle = options?.hideHeaderTitle ?? screenOptions?.hideHeaderTitle ?? false
-            let headerShown = options?.headerShown ?? screenOptions?.headerShown ?? true
-            let headerBackButtonDisplayMode = options?.headerBackButtonDisplayMode ?? screenOptions?.headerBackButtonDisplayMode ?? .inline
-            let headerBackButtonHidden = options?.headerBackButtonHidden ?? screenOptions?.headerBackButtonHidden ?? false
-            
-            let headerLeftView = options?.headerLeftView ?? screenOptions?.headerLeftView ?? nil
-            
-            let hasCustomBackButton = headerLeftView != nil
-            let headerStyle = options?.headerStyle ?? screenOptions?.headerStyle ?? HeaderStyle(
-                    .clear,
-                    isTranslucent: true
-                )
-            
-            screen.build(navigation, route)
-                .navigationTitle(hideHeaderTitle ? "" : title)
-                .navigationBarTitleDisplayMode(headerBackButtonDisplayMode)
-                .toolbar(headerShown ? .visible : .hidden, for: .navigationBar)
-                .navigationBarBackButtonHidden(headerBackButtonHidden || hasCustomBackButton)
-                .toolbarBackground(
-                    headerStyle.style,
-                    for: .navigationBar
-                )
-                .toolbarBackground(
-                    headerStyle.isTranslucent == true ? .visible : .automatic,
-                    for: .navigationBar
-                )
-                .environmentObject(anyNavigation)
-                .environment(\.navigation, anyNavigation)
-                
+            StackScreenView(
+                screen: screen,
+                screenOptions: getScreenOptions(initialRoute),
+                navigation: navigation
+            )
+            .environmentObject(anyNavigation)
         } else {
             Text("Screen '\(String(describing: route))' not found")
-                .foregroundStyle(.red)
+                            .foregroundStyle(.red)
         }
     }
 }

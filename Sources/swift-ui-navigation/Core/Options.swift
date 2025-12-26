@@ -9,16 +9,16 @@ import Foundation
 import SwiftUI
 
 public struct ScreenOptions {
-    let title: String? // fallback to the route name itself
+    var title: String? // fallback to the route name itself
     let hideHeaderTitle: Bool?
-    let headerShown: Bool?
-    let headerBackButtonDisplayMode: NavigationBarItem.TitleDisplayMode?
-    let headerBackButtonHidden: Bool?
+    var headerShown: Bool
+    var headerBackButtonDisplayMode: NavigationBarItem.TitleDisplayMode?
+    var headerBackButtonHidden: Bool?
     
     // header button options
-    let headerLeftView: HeaderLeftView?
-    let headerRightView: HeaderRightView?
-    let headerStyle: HeaderStyle?
+    var headerLeftView: HeaderLeftView?
+    var headerRightView: HeaderRightView?
+    var headerStyle: HeaderStyle?
 
     
     public init (
@@ -34,7 +34,7 @@ public struct ScreenOptions {
     ) {
         self.title = title
         self.hideHeaderTitle = hideHeaderTitle
-        self.headerShown = headerShown
+        self.headerShown = headerShown ?? true
         self.headerBackButtonDisplayMode = headerBackButtonDisplayMode
         self.headerBackButtonHidden = headerBackButtonHidden
         
@@ -61,5 +61,101 @@ enum ScreenOptionsProvider<Routes: Route> {
             return closure(navigation, route)
         }
     }
+}
+
+@MainActor
+@propertyWrapper
+public struct AppScreenOptionsState: DynamicProperty {
+    @EnvironmentObject private var screenOptionsState: ScreenOptionsState
+        
+    public var wrappedValue: ScreenOptionsState {
+        screenOptionsState
+    }
+   
+    public init() {}
+}
+
+@MainActor
+public class ScreenOptionsState: ObservableObject {
+    @Published var options: ScreenOptions
+    
+    init(options: ScreenOptions) {
+        self.options = options
+    }
+    
+    public var navigationTitle: String {
+        get {
+            options.title ?? ""
+        }
+        set {
+            options.title = newValue
+        }
+    }
+    
+    public var headerBackButtonDisplayMode: NavigationBarItem.TitleDisplayMode {
+        get {
+            options.headerBackButtonDisplayMode ?? .inline
+        }
+        set {
+            options.headerBackButtonDisplayMode = newValue
+        }
+    }
+    
+    var headerVisibility: Visibility {
+        get {
+            options.headerShown ? .visible : .hidden
+        }
+    }
+    
+    public var headerShown: Bool {
+        get {
+            options.headerShown
+        }
+        set {
+            options.headerShown = newValue
+        }
+    }
+    
+    public var headerBackButtonHidden: Bool {
+        get {
+            options.headerBackButtonHidden ?? false
+        }
+        set {
+            options.headerBackButtonHidden = newValue
+        }
+    }
+    
+    var hasCustomBackButton: Bool {
+        get {
+            headerLeftView != nil
+        }
+    }
+    
+    public var headerLeftView: HeaderLeftView? {
+        get {
+            options.headerLeftView
+        }
+        set {
+            options.headerLeftView = newValue
+        }
+    }
+    
+    public var headerRightView: HeaderRightView? {
+        get {
+            options.headerRightView
+        }
+        set {
+            options.headerRightView = newValue
+        }
+    }
+    
+    public var headerStyle: HeaderStyle {
+        get {
+            options.headerStyle ?? HeaderStyle(.clear, isTranslucent: true)
+        } set {
+            options.headerStyle = newValue
+        }
+    }
+
 }
 

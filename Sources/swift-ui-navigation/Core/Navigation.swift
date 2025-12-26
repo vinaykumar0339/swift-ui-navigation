@@ -15,6 +15,8 @@ import SwiftUI
 class AnyNavigation: ObservableObject {
     @Published var routes = [AnyRoute]()
     
+    @Published var currentScreenOptionsState: ScreenOptionsState = ScreenOptionsState(options: ScreenOptions())
+    
     public func navigate<Routes: Route>(to destination: Routes) {
         let route = AnyRoute(destination)
         routes.append(route)
@@ -35,6 +37,10 @@ class AnyNavigation: ObservableObject {
     
     public func canGoBack() -> Bool {
         return !routes.isEmpty
+    }
+    
+    internal func register(_ state: ScreenOptionsState) {
+        currentScreenOptionsState = state
     }
 }
 
