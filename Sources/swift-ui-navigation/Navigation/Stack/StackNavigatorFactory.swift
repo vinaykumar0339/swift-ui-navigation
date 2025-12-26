@@ -46,7 +46,11 @@ public struct StackNavigatorFactory<Routes: Route> {
         initialRoute: Routes,
         @StackBuilder content: () -> [StackScreen<Routes>]
     ) -> StackNavigator<Routes> {
-        StackNavigator(initialRoute: initialRoute, screens: content())
+        let screens = content()
+        if let initialScreen = screens.filter({ $0.route.name == initialRoute.name }).first ?? screens.first {
+            return StackNavigator(initialScreen: initialScreen, screens: content())
+        }
+        fatalError("Initial route \(initialRoute) not found in provided screens")
     }
     
     public func Navigator(
@@ -54,7 +58,11 @@ public struct StackNavigatorFactory<Routes: Route> {
         screenOptions: ScreenOptions? = nil,
         @StackBuilder content: () -> [StackScreen<Routes>]
     ) -> StackNavigator<Routes> {
-        StackNavigator(initialRoute: initialRoute, screenOptions: screenOptions, screens: content())
+        let screens = content()
+        if let initialScreen = screens.filter({ $0.route.name == initialRoute.name }).first ?? screens.first {
+            return StackNavigator(initialScreen: initialScreen, screens: content())
+        }
+        fatalError("Initial route \(initialRoute) not found in provided screens")
     }
     
     public func Navigator(
@@ -62,7 +70,11 @@ public struct StackNavigatorFactory<Routes: Route> {
         screenOptions: ((StackNavigation<Routes>, Routes) -> ScreenOptions?)? = nil,
         @StackBuilder content: () -> [StackScreen<Routes>]
     ) -> StackNavigator<Routes> {
-        StackNavigator(initialRoute: initialRoute, screenOptions: screenOptions, screens: content())
+        let screens = content()
+        if let initialScreen = screens.filter({ $0.route.name == initialRoute.name }).first ?? screens.first {
+            return StackNavigator(initialScreen: initialScreen, screens: content())
+        }
+        fatalError("Initial route \(initialRoute) not found in provided screens")
     }
     
 }

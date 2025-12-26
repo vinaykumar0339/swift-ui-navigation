@@ -16,6 +16,11 @@ class AnyTabNavigation: ObservableObject {
     
     @Published var routes = [AnyRoute]()
     
+    init(selectedRoute: AnyRoute? = nil, routes: [AnyRoute] = [AnyRoute]()) {
+        self.selectedRoute = selectedRoute
+        self.routes = routes
+    }
+    
     public func navigate<Routes: Route>(to route: Routes) {
         let anyRoute = AnyRoute(route)
         routes.append(anyRoute)

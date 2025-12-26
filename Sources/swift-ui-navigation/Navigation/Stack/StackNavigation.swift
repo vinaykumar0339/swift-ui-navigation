@@ -18,6 +18,14 @@ class AnyStackNavigation: ObservableObject {
     
     @Published var currentScreenOptionsState: ScreenOptionsState = ScreenOptionsState(options: ScreenOptions())
     
+    init(
+        routes: [AnyRoute] = [AnyRoute](),
+        currentScreenOptionsState: ScreenOptionsState = ScreenOptionsState(options: ScreenOptions())
+    ) {
+        self.routes = routes
+        self.currentScreenOptionsState = currentScreenOptionsState
+    }
+    
     func navigate<Routes: Route>(to destination: Routes) {
         let route = AnyRoute(destination)
         routes.append(route)

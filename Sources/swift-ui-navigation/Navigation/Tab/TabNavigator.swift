@@ -22,7 +22,7 @@ public struct TabNavigator<Routes: Route>: View {
         tabScreens: [TabScreen<Routes>]
     ) {
         
-        let anyTabNavigation = AnyTabNavigation()
+        let anyTabNavigation = AnyTabNavigation(selectedRoute: AnyRoute(initialRoute))
         _anyTabNavigation = StateObject(wrappedValue: anyTabNavigation)
         
         self.tabNavigation = TabNavigation(anyTabNavigation)
