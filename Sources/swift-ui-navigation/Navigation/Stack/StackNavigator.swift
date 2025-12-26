@@ -11,12 +11,12 @@ import SwiftUI
 @MainActor
 public struct StackNavigator<Routes: Route>: View {
     
-    @StateObject private var anyNavigation: AnyNavigation
-    private var navigation: Navigation<Routes>
+    @StateObject private var anyStackNavigation: AnyStackNavigation
+    private var stackNavigation: StackNavigation<Routes>
     
     var initialRoute: Routes
     var screenOptionsProvider: ScreenOptionsProvider<Routes>?
-    var screens: [StackScreen<Routes>]
+    var stackScreens: [StackScreen<Routes>]
     
     @State private var screenOptions: ScreenOptions?
     
@@ -24,12 +24,14 @@ public struct StackNavigator<Routes: Route>: View {
         initialRoute: Routes,
         screens: [StackScreen<Routes>]
     ) {
-        let anyNavigation = AnyNavigation()
-        _anyNavigation = StateObject(wrappedValue: anyNavigation)
-        self.navigation = Navigation<Routes>(anyNavigation)
+        let anyStackNavigation = AnyStackNavigation()
+        _anyStackNavigation = StateObject(wrappedValue: anyStackNavigation)
+        
+        self.stackNavigation = StackNavigation<Routes>(anyStackNavigation)
+        
         self.initialRoute = initialRoute
         self.screenOptionsProvider = nil
-        self.screens = screens
+        self.stackScreens = screens
     }
     
     init(
@@ -37,25 +39,27 @@ public struct StackNavigator<Routes: Route>: View {
         screenOptions: ScreenOptions? = nil,
         screens: [StackScreen<Routes>]
     ) {
-        let anyNavigation = AnyNavigation()
-        _anyNavigation = StateObject(wrappedValue: anyNavigation)
-        self.navigation = Navigation<Routes>(anyNavigation)
+        let anyStackNavigation = AnyStackNavigation()
+        _anyStackNavigation = StateObject(wrappedValue: anyStackNavigation)
+        
+        self.stackNavigation = StackNavigation<Routes>(anyStackNavigation)
+        
         self.initialRoute = initialRoute
         self.screenOptionsProvider = screenOptions.map({ .constant($0) })
-        self.screens = screens
+        self.stackScreens = screens
     }
     
     init(
         initialRoute: Routes,
-        screenOptions: ((Navigation<Routes>, Routes) -> ScreenOptions?)? = nil,
+        screenOptions: ((StackNavigation<Routes>, Routes) -> ScreenOptions?)? = nil,
         screens: [StackScreen<Routes>]
     ) {
-        let anyNavigation = AnyNavigation()
-        _anyNavigation = StateObject(wrappedValue: anyNavigation)
-        self.navigation = Navigation<Routes>(anyNavigation)
+        let anyNavigation = AnyStackNavigation()
+        _anyStackNavigation = StateObject(wrappedValue: anyNavigation)
+        self.stackNavigation = StackNavigation<Routes>(anyNavigation)
         self.initialRoute = initialRoute
         self.screenOptionsProvider = screenOptions.map({ .dynamic($0) })
-        self.screens = screens
+        self.stackScreens = screens
     }
     
     
@@ -65,7 +69,7 @@ public struct StackNavigator<Routes: Route>: View {
         case .constant(let options):
             return options
         case .dynamic(let closure):
-            return closure(navigation, route)
+            return closure(stackNavigation, route)
         }
     }
     
@@ -83,14 +87,15 @@ public struct StackNavigator<Routes: Route>: View {
                     action()
                 }
                 // if not provided the action befault should be go back.
-                navigation.goBack()
+                stackNavigation.goBack()
             }, label: {
-                HStack(alignment: .firstTextBaseline) {
+                HStack(alignment: .center) {
                     if let image = headerLeftBasicView.image {
                         Image(image)
-                    }
-                    if let systemImage = headerLeftBasicView.systemImage {
+                    } else if let systemImage = headerLeftBasicView.systemImage {
                         Image(systemName: systemImage)
+                    } else {
+                        Image(systemName: "chevron.left")
                     }
                     VStack(alignment: .leading) {
                         if let title = headerLeftBasicView.title {
@@ -148,13 +153,13 @@ public struct StackNavigator<Routes: Route>: View {
     }
     
     public var body: some View {
-        NavigationStack(path: $anyNavigation.routes) {
+        NavigationStack(path: $anyStackNavigation.routes) {
             renderScreen(for: initialRoute)
                 .toolbar {
                     toolbarLeftViewContent()
                     toolbarRightViewContent()
                 }
-                .onReceive(anyNavigation.currentScreenOptionsState.$options, perform: { output in
+                .onReceive(anyStackNavigation.currentScreenOptionsState.$options, perform: { output in
                     screenOptions = output
                 })
                 .navigationDestination(for: AnyRoute.self) { route in
@@ -165,17 +170,17 @@ public struct StackNavigator<Routes: Route>: View {
                     }
                 }
         }
+        .environmentObject(anyStackNavigation)
     }
     
     @ViewBuilder
     private func renderScreen(for route: any Route) -> some View {
-        if let screen = screens.first(where: { $0.route.name == route.name }) {
+        if let screen = stackScreens.first(where: { $0.route.name == route.name }) {
             StackScreenView(
                 screen: screen,
                 screenOptions: getScreenOptions(initialRoute),
-                navigation: navigation
+                navigation: stackNavigation
             )
-            .environmentObject(anyNavigation)
         } else {
             Text("Screen '\(String(describing: route))' not found")
                             .foregroundStyle(.red)

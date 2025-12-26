@@ -21,7 +21,7 @@ public struct StackNavigatorFactory<Routes: Route> {
     
     public func Screen(
         route: Routes,
-        @ViewBuilder content: @escaping (Navigation<Routes>, any Route) -> some View
+        @ViewBuilder content: @escaping (StackNavigation<Routes>, any Route) -> some View
     ) -> StackScreen<Routes> {
         StackScreen(route, content: content)
     }
@@ -29,15 +29,15 @@ public struct StackNavigatorFactory<Routes: Route> {
     public func Screen(
         route: Routes,
         options: ScreenOptions? = nil,
-        @ViewBuilder content: @escaping (Navigation<Routes>, any Route) -> some View
+        @ViewBuilder content: @escaping (StackNavigation<Routes>, any Route) -> some View
     ) -> StackScreen<Routes> {
         StackScreen(route, options, content: content)
     }
     
     public func Screen(
         route: Routes,
-        options: ((Navigation<Routes>, Routes) -> ScreenOptions?)? = nil,
-        @ViewBuilder content: @escaping (Navigation<Routes>, any Route) -> some View
+        options: ((StackNavigation<Routes>, Routes) -> ScreenOptions?)? = nil,
+        @ViewBuilder content: @escaping (StackNavigation<Routes>, any Route) -> some View
     ) -> StackScreen<Routes> {
         StackScreen(route, options, content: content)
     }
@@ -59,7 +59,7 @@ public struct StackNavigatorFactory<Routes: Route> {
     
     public func Navigator(
         initialRoute: Routes,
-        screenOptions: ((Navigation<Routes>, Routes) -> ScreenOptions?)? = nil,
+        screenOptions: ((StackNavigation<Routes>, Routes) -> ScreenOptions?)? = nil,
         @StackBuilder content: () -> [StackScreen<Routes>]
     ) -> StackNavigator<Routes> {
         StackNavigator(initialRoute: initialRoute, screenOptions: screenOptions, screens: content())

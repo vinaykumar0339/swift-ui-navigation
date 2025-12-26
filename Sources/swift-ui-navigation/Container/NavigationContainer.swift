@@ -9,11 +9,11 @@ import Foundation
 import SwiftUI
 
 struct NavigationKey: @preconcurrency EnvironmentKey {
-    @MainActor static let defaultValue: AnyNavigation = .init()
+    @MainActor static let defaultValue: AnyStackNavigation = .init()
 }
 
 extension EnvironmentValues {
-    var navigation: AnyNavigation {
+    var navigation: AnyStackNavigation {
         get {
             self[NavigationKey.self]
         } set {

@@ -13,11 +13,11 @@ public struct StackScreen<Routes: Route> {
     
     let route: Routes
     let optionsProvider: ScreenOptionsProvider<Routes>?
-    let build: (Navigation<Routes>, any Route) -> AnyView
+    let build: (StackNavigation<Routes>, any Route) -> AnyView
     
     public init<Content: View>(
         _ route: Routes,
-        @ViewBuilder content: @escaping (Navigation<Routes>, any Route) -> Content
+        @ViewBuilder content: @escaping (StackNavigation<Routes>, any Route) -> Content
     ) {
         self.route = route
         self.optionsProvider = nil
@@ -29,7 +29,7 @@ public struct StackScreen<Routes: Route> {
     public init<Content: View>(
         _ route: Routes,
         _ options: ScreenOptions? = nil,
-        @ViewBuilder content: @escaping (Navigation<Routes>, any Route) -> Content
+        @ViewBuilder content: @escaping (StackNavigation<Routes>, any Route) -> Content
     ) {
         self.route = route
         self.optionsProvider = options.map({ .constant($0) })
@@ -40,8 +40,8 @@ public struct StackScreen<Routes: Route> {
     
     public init<Content: View>(
         _ route: Routes,
-        _ options: ((Navigation<Routes>, Routes) -> ScreenOptions?)? = nil,
-        @ViewBuilder content: @escaping (Navigation<Routes>, any Route) -> Content
+        _ options: ((StackNavigation<Routes>, Routes) -> ScreenOptions?)? = nil,
+        @ViewBuilder content: @escaping (StackNavigation<Routes>, any Route) -> Content
     ) {
         self.route = route
         self.optionsProvider = options.map({ .dynamic($0) })
@@ -50,7 +50,7 @@ public struct StackScreen<Routes: Route> {
         }
     }
     
-    func getOptions(_ navigation: Navigation<Routes>) -> ScreenOptions? {
+    func getOptions(_ navigation: StackNavigation<Routes>) -> ScreenOptions? {
         optionsProvider?.resolve(navigation: navigation, route)
     }
 }
@@ -67,20 +67,20 @@ struct StackScreenNotFoundView: View {
 
 struct StackScreenView<Routes: Route>: View {
     
-    let screen: StackScreen<Routes>
+    let stackScreen: StackScreen<Routes>
     let screenOptions: ScreenOptions?
-    let navigation: Navigation<Routes>
+    let stackNavigation: StackNavigation<Routes>
     
     @StateObject private var screenOptionsState: ScreenOptionsState
-    @EnvironmentObject private var anyNavigation: AnyNavigation
+    @EnvironmentObject private var anyStackNavigation: AnyStackNavigation
     
     init(screen: StackScreen<Routes>,
          screenOptions: ScreenOptions?,
-         navigation: Navigation<Routes>
+         navigation: StackNavigation<Routes>
     ) {
-        self.screen = screen
+        self.stackScreen = screen
         self.screenOptions = screenOptions
-        self.navigation = navigation
+        self.stackNavigation = navigation
         
         let screenOptions = screen.getOptions(navigation) ?? self.screenOptions ?? ScreenOptions()
         
@@ -93,10 +93,10 @@ struct StackScreenView<Routes: Route>: View {
     
     var body: some View {
         
-        screen
-            .build(navigation, screen.route)
+        stackScreen
+            .build(stackNavigation, stackScreen.route)
             .onAppear {
-                anyNavigation.register(screenOptionsState)
+                anyStackNavigation.register(screenOptionsState)
             }
             .environmentObject(screenOptionsState) // current screen options state
             .navigationTitle(screenOptionsState.navigationTitle)

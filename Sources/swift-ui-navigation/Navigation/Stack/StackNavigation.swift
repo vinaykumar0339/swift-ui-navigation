@@ -9,10 +9,11 @@
 import Foundation
 import SwiftUI
 
-/// Type-erased navigation which is used in the Environement(\.navigation) to access the navigation
+/// Type-erased navigation which is used in the @AppStackNavigation<Routes> to access the navigation
 /// EnvironmentKey is not supported the generic types like EnvironemtObject
+
 @MainActor
-class AnyNavigation: ObservableObject {
+class AnyStackNavigation: ObservableObject {
     @Published var routes = [AnyRoute]()
     
     @Published var currentScreenOptionsState: ScreenOptionsState = ScreenOptionsState(options: ScreenOptions())
@@ -46,21 +47,21 @@ class AnyNavigation: ObservableObject {
 
 @MainActor
 @propertyWrapper
-public struct AppNavigation<Routes: Route>: DynamicProperty {
-    @EnvironmentObject private var navigation: AnyNavigation
+public struct AppStackNavigation<Routes: Route>: DynamicProperty {
+    @EnvironmentObject private var navigation: AnyStackNavigation
 
-    public var wrappedValue: Navigation<Routes> {
-        Navigation(navigation)
+    public var wrappedValue: StackNavigation<Routes> {
+        StackNavigation(navigation)
     }
 
     public init() {}
 }
 
 @MainActor
-public struct Navigation<Routes: Route> {
-    private let navigation: AnyNavigation
+public struct StackNavigation<Routes: Route> {
+    private let navigation: AnyStackNavigation
 
-    init(_ navigation: AnyNavigation) {
+    init(_ navigation: AnyStackNavigation) {
         self.navigation = navigation
     }
 

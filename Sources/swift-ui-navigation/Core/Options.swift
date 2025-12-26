@@ -48,10 +48,10 @@ public struct ScreenOptions {
 @MainActor
 enum ScreenOptionsProvider<Routes: Route> {
     case constant(ScreenOptions)
-    case dynamic((Navigation<Routes>, Routes) -> ScreenOptions?)
+    case dynamic((StackNavigation<Routes>, Routes) -> ScreenOptions?)
     
     func resolve(
-        navigation: Navigation<Routes>,
+        navigation: StackNavigation<Routes>,
         _ route: Routes
     ) -> ScreenOptions? {
         switch self {

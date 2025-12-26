@@ -20,6 +20,20 @@ public struct HeaderLeftBasicView {
     let action: (() -> Void)?
     
     public init(
+        tintColor: Color? = .primary,
+        title: String? = nil,
+        subtitle: String? = nil,
+        action: (() -> Void)? = nil
+    ) {
+        self.image = nil
+        self.tintColor = tintColor
+        self.systemImage = nil
+        self.title = title
+        self.subtitle = subtitle
+        self.action = action
+    }
+    
+    public init(
         image: String? = nil,
         tintColor: Color? = .primary,
         title: String? = nil,
