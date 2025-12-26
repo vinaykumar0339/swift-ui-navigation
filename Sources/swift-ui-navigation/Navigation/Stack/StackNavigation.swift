@@ -18,29 +18,31 @@ class AnyStackNavigation: ObservableObject {
     
     @Published var currentScreenOptionsState: ScreenOptionsState = ScreenOptionsState(options: ScreenOptions())
     
-    public func navigate<Routes: Route>(to destination: Routes) {
+    func navigate<Routes: Route>(to destination: Routes) {
         let route = AnyRoute(destination)
         routes.append(route)
     }
     
-    public func pop() {
+    func pop() {
         guard !routes.isEmpty else { return }
         routes.removeLast()
     }
     
-    public func popToTop() {
+    func popToTop() {
         routes.removeAll(keepingCapacity: false)
     }
     
-    public func goBack() {
-        pop()
+    func goBack(_ times: Int = 1) {
+        for _ in 1...times {
+            pop()
+        }
     }
     
-    public func canGoBack() -> Bool {
+    func canGoBack() -> Bool {
         return !routes.isEmpty
     }
     
-    internal func register(_ state: ScreenOptionsState) {
+    func register(_ state: ScreenOptionsState) {
         currentScreenOptionsState = state
     }
 }
@@ -77,8 +79,8 @@ public struct StackNavigation<Routes: Route> {
         navigation.popToTop()
     }
 
-    public func goBack() {
-        navigation.goBack()
+    public func goBack(_ times: Int = 1) {
+        navigation.goBack(times)
     }
     
     public var canGoBack: Bool {

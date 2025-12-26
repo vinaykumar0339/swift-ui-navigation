@@ -14,9 +14,39 @@ import SwiftUI
 class AnyTabNavigation: ObservableObject {
     @Published var selectedRoute: AnyRoute?
     
-    public func switchTab<Routes: Route>(to route: Routes) {
-        selectedRoute = AnyRoute(route)
+    @Published var routes = [AnyRoute]()
+    
+    public func navigate<Routes: Route>(to route: Routes) {
+        let anyRoute = AnyRoute(route)
+        routes.append(anyRoute)
+        selectedRoute = anyRoute
     }
+    
+    func pop() {
+        guard !routes.isEmpty else { return }
+        routes.removeLast()
+        // set the current last route
+        selectedRoute = routes.last
+    }
+    
+    func popToTop() {
+        guard !routes.isEmpty else { return }
+        
+        // remove all existing routes but keep start route.
+        routes.removeSubrange(1..<routes.count)
+        selectedRoute = routes.last
+    }
+    
+    func goBack(_ times: Int = 1) {
+        for _ in 1...times {
+            pop()
+        }
+    }
+    
+    func canGoBack() -> Bool {
+        return routes.count > 1
+    }
+    
 }
 
 
@@ -40,7 +70,23 @@ public struct TabNavigation<Routes: Route> {
         self.appTabNavigation = appTabNavigation
     }
     
-    public func switchTab(to route: Routes) {
-        appTabNavigation.switchTab(to: route)
+    public func navigate(to route: Routes) {
+        appTabNavigation.navigate(to: route)
+    }
+    
+    public func pop() {
+        appTabNavigation.pop()
+    }
+    
+    public func popToRoot() {
+        appTabNavigation.popToTop()
+    }
+    
+    public func goBack(_ times: Int = 1) {
+        appTabNavigation.goBack(times)
+    }
+    
+    public var canGoBack: Bool {
+        appTabNavigation.canGoBack()
     }
 }
