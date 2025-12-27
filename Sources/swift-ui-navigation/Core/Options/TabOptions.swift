@@ -12,12 +12,18 @@ public struct TabOptions {
     
     let tabBarStyle: TabBarStyle?
     
+    let tabBar: TabBar?
+    
     public init(
         tabItem: TabItem? = nil,
-        tabBarStyle: TabBarStyle? = nil
+        tabBarStyle: TabBarStyle? = nil,
+        
+        tabBar: TabBar? = nil
     ) {
         self.tabItem = tabItem
         self.tabBarStyle = tabBarStyle
+        
+        self.tabBar = tabBar
     }
 }
 

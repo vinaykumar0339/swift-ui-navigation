@@ -78,16 +78,29 @@ struct TabScreenView<Routes: Route>: View {
     var body: some View {
         
         let tabBarStyle = tabOptions?.tabBarStyle ?? .init(.clear, isVisible: true)
+        let hasCustomTabBar = tabOptions?.tabBar != nil
         
-        tabScreen
+        let screenView = tabScreen
             .build(tabNavigation, tabScreen.route)
             .tag(AnyRoute(tabScreen.route))
-            .tabItem {
+            .toolbarBackground(tabBarStyle.style, for: .tabBar)
+            .toolbarBackground(tabBarStyle.isVisible == true ? .visible : .hidden, for: .tabBar)
+        
+        if hasCustomTabBar {
+            screenView
+                .safeAreaInset(edge: .bottom) {
+                    if tabBarStyle.isVisible == true {
+                        tabOptions?.tabBar?.resolve()
+                    }
+                }
+                .toolbar(.hidden, for: .tabBar) // Hide the default toolBar
+        } else {
+            screenView.tabItem {
                 let tabItem = tabOptions?.tabItem ?? .item(.text(tabScreen.route.name))
                 return tabItem.resolve()
             }
-            .toolbarBackground(tabBarStyle.style, for: .tabBar)
-            .toolbarBackground(tabBarStyle.isVisible == true ? .visible : .hidden, for: .tabBar)
+        }
+        
     }
     
 }
