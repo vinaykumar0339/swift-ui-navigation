@@ -2,61 +2,44 @@
 //  File.swift
 //  swift-ui-navigation
 //
-//  Created by Vinay Kumar on 22/12/25.
+//  Created by Vinay Kumar on 24/12/25.
 //
 
 import Foundation
 
-public struct Route<
-    Screen: ScreenProtocol
->: Hashable {
-    public var id: UUID
-    public let name: Screen
-    private var params: Data?
-    private var options: ScreenOptions?
+public typealias RouteName = String
+public typealias RouteParams = Codable & Hashable
+
+public struct EmptyParams: RouteParams {
+    public init() {}
+}
+
+public protocol Route: Hashable {
+    var name: RouteName { get }
+    var params: any RouteParams { get }
+}
+
+/// Type-erased Any Route to use this in the Navigation State.
+struct AnyRoute: Route, CustomStringConvertible {
     
-    public init<Params: RouteParams>(
-        id: UUID = UUID(),
-        name: Screen,
-        params: Params? = nil,
-        options: ScreenOptions? = nil
-    ) {
-        self.id = id
-        self.name = name
-        self.params = try? JSONEncoder().encode(params)
-        self.options = options
+    let name: RouteName
+    let params: any RouteParams
+    
+    init<R: Route>(_ route: R) {
+        self.name = route.name
+        self.params = route.params
     }
     
-    public func getParams<Params: RouteParams>() -> Params? {
-        guard let data = params else { return nil }
-        return try? JSONDecoder().decode(Params.self, from: data)
-    }
-    
-    mutating func updateParams<Params: RouteParams>(_ params: Params) {
-        self.params = try? JSONEncoder().encode(params)
-    }
-    
-    public func getOptions() -> ScreenOptions? {
-        options
-    }
-    
-    mutating func updateOptions(_ options: ScreenOptions) {
-        self.options = options
-    }
-    
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
+    func hash(into hasher: inout Hasher) {
         hasher.combine(name)
     }
     
-    public static func == (lhs: Route<Screen>, rhs: Route<Screen>) -> Bool {
-        lhs.id == rhs.id && lhs.name == rhs.name
+    static func == (lhs: AnyRoute, rhs: AnyRoute) -> Bool {
+        lhs.name == rhs.name
+    }
+    
+    var description: String {
+        return "Route(name: \(name), params: \(String(describing: params))"
     }
     
 }
-
-public protocol RouteParams: Codable & Hashable {}
-
-public struct EmptyParams: RouteParams {}
-
-public protocol ScreenProtocol: Hashable, CaseIterable {}
