@@ -14,6 +14,10 @@ public struct TabNavigator<Routes: Route>: View {
     @StateObject private var anyTabNavigation: AnyTabNavigation
     private var tabNavigation: TabNavigation<Routes>
     
+    // get current local navigation. to set the parent child relationship
+    @Environment(\.navigation) var navigation
+    @StateObject private var localNavigation: Navigation
+    
     var initialRoute: Routes
     var tabOptionsProvider: TabOptionsProvider<Routes>?
     var tabScreens: [TabScreen<Routes>]
@@ -27,6 +31,9 @@ public struct TabNavigator<Routes: Route>: View {
         _anyTabNavigation = StateObject(wrappedValue: anyTabNavigation)
         
         self.tabNavigation = TabNavigation(anyTabNavigation)
+        
+        let localNavigation = Navigation(navigator: self.tabNavigation)
+        _localNavigation = StateObject(wrappedValue: localNavigation)
         
         self.initialRoute = initialRoute
         self.tabOptionsProvider = nil
@@ -44,6 +51,9 @@ public struct TabNavigator<Routes: Route>: View {
         
         self.tabNavigation = TabNavigation(anyTabNavigation)
         
+        let localNavigation = Navigation(navigator: self.tabNavigation)
+        _localNavigation = StateObject(wrappedValue: localNavigation)
+        
         self.initialRoute = initialRoute
         self.tabOptionsProvider = tabOptions.map({.constant($0)})
         self.tabScreens = tabScreens
@@ -59,6 +69,9 @@ public struct TabNavigator<Routes: Route>: View {
         _anyTabNavigation = StateObject(wrappedValue: anyTabNavigation)
         
         self.tabNavigation = TabNavigation(anyTabNavigation)
+        
+        let localNavigation = Navigation(navigator: self.tabNavigation)
+        _localNavigation = StateObject(wrappedValue: localNavigation)
         
         self.initialRoute = initialRoute
         self.tabOptionsProvider = tabOptions.map({.dynamic($0)})
@@ -87,6 +100,11 @@ public struct TabNavigator<Routes: Route>: View {
                 )
             }
         }
+        .onAppear {
+            // TODO: Check this can be moved to init, as environment variable can't be accessed in the init
+            localNavigation.setParent(navigation)
+        }
+        .environment(\.navigation, localNavigation)
         .environmentObject(anyTabNavigation)
     }
     

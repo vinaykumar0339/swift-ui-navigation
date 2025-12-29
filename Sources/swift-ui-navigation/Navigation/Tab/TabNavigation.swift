@@ -11,14 +11,18 @@ import SwiftUI
 /// Type-erased navigation which is used in the @AppTabNavigation<Routes> to access the navigation
 /// EnvironmentKey is not supported the generic types like EnvironemtObject
 @MainActor
-class AnyTabNavigation: ObservableObject {
+class AnyTabNavigation: ObservableObject, BaseNavigation {
+    typealias Routes = AnyRoute
+    
     @Published var selectedRoute: AnyRoute?
     
     @Published var routes = [AnyRoute]()
     
-    init(selectedRoute: AnyRoute? = nil, routes: [AnyRoute] = [AnyRoute]()) {
+    init(selectedRoute: AnyRoute? = nil) {
         self.selectedRoute = selectedRoute
-        self.routes = routes
+        if let selectedRoute {
+            self.routes = [selectedRoute]
+        }
     }
     
     public func navigate<Routes: Route>(to route: Routes) {
@@ -49,7 +53,7 @@ class AnyTabNavigation: ObservableObject {
     }
     
     func canGoBack() -> Bool {
-        return routes.count > 1
+        return !routes.isEmpty
     }
     
 }
@@ -68,7 +72,8 @@ public struct AppTabNavigation<Routes: Route>: DynamicProperty {
 }
 
 @MainActor
-public struct TabNavigation<Routes: Route> {
+public struct TabNavigation<Routes: Route>: BaseNavigation {
+    
     private let appTabNavigation: AnyTabNavigation
     
     init(_ appTabNavigation: AnyTabNavigation) {
@@ -83,7 +88,7 @@ public struct TabNavigation<Routes: Route> {
         appTabNavigation.pop()
     }
     
-    public func popToRoot() {
+    public func popToTop() {
         appTabNavigation.popToTop()
     }
     
@@ -91,7 +96,7 @@ public struct TabNavigation<Routes: Route> {
         appTabNavigation.goBack(times)
     }
     
-    public var canGoBack: Bool {
+    public func canGoBack() -> Bool {
         appTabNavigation.canGoBack()
     }
 }

@@ -14,6 +14,10 @@ public struct StackNavigator<Routes: Route>: View {
     @StateObject private var anyStackNavigation: AnyStackNavigation
     private var stackNavigation: StackNavigation<Routes>
     
+    // get current local navigation. to set the parent child relationship
+    @Environment(\.navigation) var navigation
+    @StateObject private var localNavigation: Navigation
+    
     var initialScreen: StackScreen<Routes>
     var screenOptionsProvider: ScreenOptionsProvider<Routes>?
     var stackScreens: [StackScreen<Routes>]
@@ -28,6 +32,9 @@ public struct StackNavigator<Routes: Route>: View {
         _anyStackNavigation = StateObject(wrappedValue: anyStackNavigation)
         
         self.stackNavigation = StackNavigation<Routes>(anyStackNavigation)
+        
+        let localNavigation = Navigation(navigator: self.stackNavigation)
+        _localNavigation = StateObject(wrappedValue: localNavigation)
         
         self.initialScreen = initialScreen
         self.screenOptionsProvider = nil
@@ -44,6 +51,9 @@ public struct StackNavigator<Routes: Route>: View {
         
         self.stackNavigation = StackNavigation<Routes>(anyStackNavigation)
         
+        let localNavigation = Navigation(navigator: self.stackNavigation)
+        _localNavigation = StateObject(wrappedValue: localNavigation)
+        
         self.initialScreen = initialScreen
         self.screenOptionsProvider = screenOptions.map({ .constant($0) })
         self.stackScreens = screens
@@ -56,7 +66,12 @@ public struct StackNavigator<Routes: Route>: View {
     ) {
         let anyNavigation = AnyStackNavigation()
         _anyStackNavigation = StateObject(wrappedValue: anyNavigation)
+        
         self.stackNavigation = StackNavigation<Routes>(anyNavigation)
+        
+        let localNavigation = Navigation(navigator: self.stackNavigation)
+        _localNavigation = StateObject(wrappedValue: localNavigation)
+        
         self.initialScreen = initialScreen
         self.screenOptionsProvider = screenOptions.map({ .dynamic($0) })
         self.stackScreens = screens
@@ -170,6 +185,11 @@ public struct StackNavigator<Routes: Route>: View {
                     toolbarRightViewContent()
                 }
         }
+        .onAppear {
+            // TODO: Check this can be moved to init, as environment variable can't be accessed in the init
+            localNavigation.setParent(navigation)
+        }
+        .environment(\.navigation, localNavigation)
         .environmentObject(anyStackNavigation)
     }
     

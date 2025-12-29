@@ -13,7 +13,9 @@ import SwiftUI
 /// EnvironmentKey is not supported the generic types like EnvironemtObject
 
 @MainActor
-class AnyStackNavigation: ObservableObject {
+class AnyStackNavigation: ObservableObject, BaseNavigation {
+    typealias Routes = AnyRoute
+    
     @Published var routes = [AnyRoute]()
     
     @Published var currentScreenOptionsState: ScreenOptionsState = ScreenOptionsState(options: ScreenOptions())
@@ -26,8 +28,8 @@ class AnyStackNavigation: ObservableObject {
         self.currentScreenOptionsState = currentScreenOptionsState
     }
     
-    func navigate<Routes: Route>(to destination: Routes) {
-        let route = AnyRoute(destination)
+    func navigate<Routes: Route>(to route: Routes) {
+        let route = AnyRoute(route)
         routes.append(route)
     }
     
@@ -68,7 +70,10 @@ public struct AppStackNavigation<Routes: Route>: DynamicProperty {
 }
 
 @MainActor
-public struct StackNavigation<Routes: Route> {
+public struct StackNavigation<Routes: Route>: BaseNavigation {
+    
+    public typealias Routes = Routes
+    
     private let navigation: AnyStackNavigation
 
     init(_ navigation: AnyStackNavigation) {
@@ -91,7 +96,7 @@ public struct StackNavigation<Routes: Route> {
         navigation.goBack(times)
     }
     
-    public var canGoBack: Bool {
+    public func canGoBack() -> Bool {
         navigation.canGoBack()
     }
 }
