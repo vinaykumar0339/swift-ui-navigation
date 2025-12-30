@@ -72,7 +72,6 @@ struct StackScreenView<Routes: Route>: View {
     let stackNavigation: StackNavigation<Routes>
     
     @StateObject private var screenOptionsState: ScreenOptionsState
-    @EnvironmentObject private var anyStackNavigation: AnyStackNavigation
     
     init(screen: StackScreen<Routes>,
          screenOptions: ScreenOptions?,
@@ -96,7 +95,7 @@ struct StackScreenView<Routes: Route>: View {
         stackScreen
             .build(stackNavigation, stackScreen.route)
             .onAppear {
-                anyStackNavigation.register(screenOptionsState)
+                stackNavigation.register(screenOptionsState)
             }
             .environmentObject(screenOptionsState) // current screen options state
             .navigationTitle(screenOptionsState.navigationTitle)

@@ -7,38 +7,74 @@
 
 import Foundation
 import SwiftUI
+import Combine
 
-/// Type-erased navigation which is used in the @AppTabNavigation<Routes> to access the navigation
-/// EnvironmentKey is not supported the generic types like EnvironemtObject
 @MainActor
-class AnyTabNavigation: ObservableObject, BaseNavigation {
-    typealias Routes = AnyRoute
+@propertyWrapper
+public struct AppTabNavigator<Routes: Route>: DynamicProperty {
+    @Environment(\.navigation) private var navigation
     
-    @Published var selectedRoute: AnyRoute?
+    public init() {}
     
-    @Published var routes = [AnyRoute]()
+    public var wrappedValue: TabNavigation<Routes> {
+        guard let stackNavigation =
+                navigation.resolveTabNavigation(Routes.self)
+        else {
+            fatalError("""
+            No TabNavigation<\(Routes.self)> found in environment.
+            Make sure that AppTabNavigator used inside the view of NavigationContainer where you have registered your view.
+            """)
+        }
+        return stackNavigation
+    }
+}
+
+@MainActor
+public class TabNavigation<Routes: Route>: ObservableObject, BaseNavigation {
     
-    init(selectedRoute: AnyRoute? = nil) {
+    @Published var selectedRoute: Routes?
+    
+    private var routes = [Routes]()
+    
+    private var cancellables = Set<AnyCancellable>()
+    
+    init(selectedRoute: Routes? = nil) {
         self.selectedRoute = selectedRoute
         if let selectedRoute {
             self.routes = [selectedRoute]
         }
+        
+        bindSelection()
     }
     
-    public func navigate<Routes: Route>(to route: Routes) {
-        let anyRoute = AnyRoute(route)
-        routes.append(anyRoute)
-        selectedRoute = anyRoute
+    private func bindSelection() {
+        $selectedRoute
+            .compactMap { $0 }
+            .removeDuplicates()
+            .sink { [weak self] route in
+                self?.pushIfNeeded(route)
+            }
+            .store(in: &cancellables)
     }
     
-    func pop() {
+    private func pushIfNeeded(_ route: Routes) {
+        guard routes.last != route else { return }
+        routes.append(route)
+    }
+    
+    public func navigate(to route: Routes) {
+        routes.append(route)
+        selectedRoute = route
+    }
+    
+    public func pop() {
         guard !routes.isEmpty else { return }
         routes.removeLast()
         // set the current last route
         selectedRoute = routes.last
     }
     
-    func popToTop() {
+    public func popToTop() {
         guard !routes.isEmpty else { return }
         
         // remove all existing routes but keep start route.
@@ -46,57 +82,13 @@ class AnyTabNavigation: ObservableObject, BaseNavigation {
         selectedRoute = routes.last
     }
     
-    func goBack(_ times: Int = 1) {
+    public func goBack(_ times: Int = 1) {
         for _ in 1...times {
             pop()
         }
     }
     
-    func canGoBack() -> Bool {
-        return !routes.isEmpty
-    }
-    
-}
-
-
-@MainActor
-@propertyWrapper
-public struct AppTabNavigation<Routes: Route>: DynamicProperty {
-    @EnvironmentObject private var tabNavigation: AnyTabNavigation
-    
-    public var wrappedValue: TabNavigation<Routes> {
-        TabNavigation(tabNavigation)
-    }
-    
-    public init() {}
-}
-
-@MainActor
-public struct TabNavigation<Routes: Route>: BaseNavigation {
-    
-    private let appTabNavigation: AnyTabNavigation
-    
-    init(_ appTabNavigation: AnyTabNavigation) {
-        self.appTabNavigation = appTabNavigation
-    }
-    
-    public func navigate(to route: Routes) {
-        appTabNavigation.navigate(to: route)
-    }
-    
-    public func pop() {
-        appTabNavigation.pop()
-    }
-    
-    public func popToTop() {
-        appTabNavigation.popToTop()
-    }
-    
-    public func goBack(_ times: Int = 1) {
-        appTabNavigation.goBack(times)
-    }
-    
     public func canGoBack() -> Bool {
-        appTabNavigation.canGoBack()
+        return !routes.isEmpty
     }
 }

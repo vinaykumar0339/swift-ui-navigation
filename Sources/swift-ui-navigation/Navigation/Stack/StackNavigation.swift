@@ -9,94 +9,67 @@
 import Foundation
 import SwiftUI
 
-/// Type-erased navigation which is used in the @AppStackNavigation<Routes> to access the navigation
-/// EnvironmentKey is not supported the generic types like EnvironemtObject
+@MainActor
+@propertyWrapper
+public struct AppStackNavigator<Routes: Route>: DynamicProperty {
+    @Environment(\.navigation) private var navigation
+    
+    public init() {}
+    
+    public var wrappedValue: StackNavigation<Routes> {
+        guard let stackNavigation =
+            navigation.resolveStackNavigation(Routes.self)
+        else {
+            fatalError("""
+            No StackNavigation<\(Routes.self)> found in environment.
+            Make sure that AppStackNavigator used inside the view of NavigationContainer where you have registered your view.
+            """)
+        }
+        return stackNavigation
+    }
+}
 
 @MainActor
-class AnyStackNavigation: ObservableObject, BaseNavigation {
-    typealias Routes = AnyRoute
+public class StackNavigation<Routes: Route>: ObservableObject, BaseNavigation {
     
-    @Published var routes = [AnyRoute]()
+    public typealias Routes = Routes
+    
+    @Published var routes = [Routes]()
     
     @Published var currentScreenOptionsState: ScreenOptionsState = ScreenOptionsState(options: ScreenOptions())
     
     init(
-        routes: [AnyRoute] = [AnyRoute](),
+        routes: [Routes] = [Routes](),
         currentScreenOptionsState: ScreenOptionsState = ScreenOptionsState(options: ScreenOptions())
     ) {
         self.routes = routes
         self.currentScreenOptionsState = currentScreenOptionsState
     }
     
-    func navigate<Routes: Route>(to route: Routes) {
-        let route = AnyRoute(route)
+    public func navigate(to route: Routes) {
         routes.append(route)
     }
     
-    func pop() {
+    public func pop() {
         guard !routes.isEmpty else { return }
         routes.removeLast()
     }
     
-    func popToTop() {
+    public func popToTop() {
         routes.removeAll(keepingCapacity: false)
     }
     
-    func goBack(_ times: Int = 1) {
+    public func goBack(_ times: Int = 1) {
         for _ in 1...times {
             pop()
         }
     }
     
-    func canGoBack() -> Bool {
+    public func canGoBack() -> Bool {
         return !routes.isEmpty
     }
     
     func register(_ state: ScreenOptionsState) {
         currentScreenOptionsState = state
-    }
-}
-
-@MainActor
-@propertyWrapper
-public struct AppStackNavigation<Routes: Route>: DynamicProperty {
-    @EnvironmentObject private var navigation: AnyStackNavigation
-
-    public var wrappedValue: StackNavigation<Routes> {
-        StackNavigation(navigation)
-    }
-
-    public init() {}
-}
-
-@MainActor
-public struct StackNavigation<Routes: Route>: BaseNavigation {
-    
-    public typealias Routes = Routes
-    
-    private let navigation: AnyStackNavigation
-
-    init(_ navigation: AnyStackNavigation) {
-        self.navigation = navigation
-    }
-
-    public func navigate(to route: Routes) {
-        navigation.navigate(to: route)
-    }
-    
-    public func pop() {
-        navigation.pop()
-    }
-    
-    public func popToTop() {
-        navigation.popToTop()
-    }
-
-    public func goBack(_ times: Int = 1) {
-        navigation.goBack(times)
-    }
-    
-    public func canGoBack() -> Bool {
-        navigation.canGoBack()
     }
 }

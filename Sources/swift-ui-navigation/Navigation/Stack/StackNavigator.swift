@@ -11,8 +11,7 @@ import SwiftUI
 @MainActor
 public struct StackNavigator<Routes: Route>: View {
     
-    @StateObject private var anyStackNavigation: AnyStackNavigation
-    private var stackNavigation: StackNavigation<Routes>
+    @StateObject private var stackNavigation: StackNavigation<Routes>
     
     // get current local navigation. to set the parent child relationship
     @Environment(\.navigation) var navigation
@@ -28,12 +27,11 @@ public struct StackNavigator<Routes: Route>: View {
         initialScreen: StackScreen<Routes>,
         screens: [StackScreen<Routes>]
     ) {
-        let anyStackNavigation = AnyStackNavigation()
-        _anyStackNavigation = StateObject(wrappedValue: anyStackNavigation)
         
-        self.stackNavigation = StackNavigation<Routes>(anyStackNavigation)
+        let stackNavigation = StackNavigation<Routes>()
+        _stackNavigation = StateObject(wrappedValue: stackNavigation)
         
-        let localNavigation = Navigation(navigator: self.stackNavigation)
+        let localNavigation = Navigation(navigator: stackNavigation)
         _localNavigation = StateObject(wrappedValue: localNavigation)
         
         self.initialScreen = initialScreen
@@ -46,12 +44,11 @@ public struct StackNavigator<Routes: Route>: View {
         screenOptions: ScreenOptions? = nil,
         screens: [StackScreen<Routes>]
     ) {
-        let anyStackNavigation = AnyStackNavigation()
-        _anyStackNavigation = StateObject(wrappedValue: anyStackNavigation)
         
-        self.stackNavigation = StackNavigation<Routes>(anyStackNavigation)
+        let stackNavigation = StackNavigation<Routes>()
+        _stackNavigation = StateObject(wrappedValue: stackNavigation)
         
-        let localNavigation = Navigation(navigator: self.stackNavigation)
+        let localNavigation = Navigation(navigator: stackNavigation)
         _localNavigation = StateObject(wrappedValue: localNavigation)
         
         self.initialScreen = initialScreen
@@ -64,12 +61,11 @@ public struct StackNavigator<Routes: Route>: View {
         screenOptions: ((StackNavigation<Routes>, Routes) -> ScreenOptions?)? = nil,
         screens: [StackScreen<Routes>]
     ) {
-        let anyNavigation = AnyStackNavigation()
-        _anyStackNavigation = StateObject(wrappedValue: anyNavigation)
         
-        self.stackNavigation = StackNavigation<Routes>(anyNavigation)
+        let stackNavigation = StackNavigation<Routes>()
+        _stackNavigation = StateObject(wrappedValue: stackNavigation)
         
-        let localNavigation = Navigation(navigator: self.stackNavigation)
+        let localNavigation = Navigation(navigator: stackNavigation)
         _localNavigation = StateObject(wrappedValue: localNavigation)
         
         self.initialScreen = initialScreen
@@ -168,12 +164,12 @@ public struct StackNavigator<Routes: Route>: View {
     }
     
     public var body: some View {
-        NavigationStack(path: $anyStackNavigation.routes) {
+        NavigationStack(path: $stackNavigation.routes) {
             renderInitialScreen(for: initialScreen)
-                .onReceive(anyStackNavigation.currentScreenOptionsState.$options, perform: { output in
+                .onReceive(stackNavigation.currentScreenOptionsState.$options, perform: { output in
                     screenOptions = output
                 })
-                .navigationDestination(for: AnyRoute.self) { route in
+                .navigationDestination(for: Routes.self) { route in
                     renderScreen(for: route)
                     .toolbar {
                         toolbarLeftViewContent()
@@ -190,7 +186,6 @@ public struct StackNavigator<Routes: Route>: View {
             localNavigation.setParent(navigation)
         }
         .environment(\.navigation, localNavigation)
-        .environmentObject(anyStackNavigation)
     }
     
     @ViewBuilder

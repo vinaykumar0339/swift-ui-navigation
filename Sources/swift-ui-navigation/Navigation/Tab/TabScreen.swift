@@ -62,8 +62,6 @@ struct TabScreenView<Routes: Route>: View {
     var tabOptions: TabOptions?
     var tabNavigation: TabNavigation<Routes>
     
-    @EnvironmentObject private var anyTabNavigation: AnyTabNavigation
-    
     init(
         tabScreen: TabScreen<Routes>,
         tabOptions: TabOptions? = nil,
@@ -82,7 +80,7 @@ struct TabScreenView<Routes: Route>: View {
         
         let screenView = tabScreen
             .build(tabNavigation, tabScreen.route)
-            .tag(AnyRoute(tabScreen.route))
+            .tag(tabScreen.route)
             .toolbarBackground(tabBarStyle.style, for: .tabBar)
             .toolbarBackground(tabBarStyle.isVisible == true ? .visible : .hidden, for: .tabBar)
         

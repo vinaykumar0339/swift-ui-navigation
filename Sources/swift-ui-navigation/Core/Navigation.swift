@@ -36,10 +36,10 @@ public class Navigation: ObservableObject {
     
     typealias Routes = Route
     
-    private var navigator: any BaseNavigation
-    private var parent: Navigation?
+    private var navigator: (any BaseNavigation)?
+    weak private var parent: Navigation?
     
-    public init(navigator: any BaseNavigation) {
+    public init(navigator: (any BaseNavigation)? = nil) {
         self.navigator = navigator
     }
     
@@ -62,6 +62,9 @@ public class Navigation: ObservableObject {
     }
     
     public func pop() {
+        guard let navigator else {
+            return
+        }
         if navigator.canGoBack() == true {
             return navigator.pop()
         } else if let parent {
@@ -72,6 +75,9 @@ public class Navigation: ObservableObject {
     }
     
     public func popToTop() {
+        guard let navigator else {
+            return
+        }
         if navigator.canGoBack() == true {
             return navigator.popToTop()
         } else if let parent {
@@ -82,6 +88,9 @@ public class Navigation: ObservableObject {
     }
     
     public func canGoBack() -> Bool {
+        guard let navigator else {
+            return false
+        }
         if navigator.canGoBack() == true {
             return true
         }
@@ -94,6 +103,10 @@ public class Navigation: ObservableObject {
             return
         }
         
+        guard let navigator else {
+            return
+        }
+        
         if navigator.canGoBack() {
             return navigator.goBack(times)
         } else if let parent {
@@ -101,6 +114,45 @@ public class Navigation: ObservableObject {
         } else {
             print("no navigation to go back")
         }
+    }
+    
+    func resolveStackNavigation<StackRoutes: Route>(
+        _ routes: StackRoutes.Type = StackRoutes.self
+    ) -> StackNavigation<StackRoutes>? {
+        guard let navigator else {
+            return nil
+        }
+        
+        if let stackNavigation = navigator as? StackNavigation<StackRoutes> {
+            return stackNavigation
+        } else if let parent {
+            if let stackNavigation = parent.resolveStackNavigation(routes) {
+                return stackNavigation
+            } else {
+                return nil
+            }
+        }
+        return nil
+    }
+    
+    func resolveTabNavigation<TabRoutes: Route>(
+        _ routes: TabRoutes.Type = TabRoutes.self
+    ) -> TabNavigation<TabRoutes>? {
+        guard let navigator else {
+            return nil
+        }
+        
+        if let tabNavigation = navigator as? TabNavigation<TabRoutes> {
+            return tabNavigation
+        } else if let parent {
+            if let tabNavigation = parent.resolveTabNavigation(routes) {
+                return tabNavigation
+            } else {
+                return nil
+            }
+        }
+        
+        return nil
     }
     
 }

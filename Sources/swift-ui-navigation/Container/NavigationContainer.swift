@@ -10,7 +10,7 @@ import SwiftUI
 
 struct NavigationKey: @preconcurrency EnvironmentKey {
     // TODO: Need to remove this AnyStackNavigation later. of the start init.
-    @MainActor static let defaultValue: Navigation = .init(navigator: AnyStackNavigation())
+    @MainActor static let defaultValue: Navigation = .init()
 }
 
 extension EnvironmentValues {
@@ -25,7 +25,7 @@ extension EnvironmentValues {
 
 public struct NavigationContainer<Content: View>: View {
     
-    @StateObject private var navigation = Navigation(navigator: AnyStackNavigation())
+    @StateObject private var navigation = Navigation()
     
     private let content: Content
     
