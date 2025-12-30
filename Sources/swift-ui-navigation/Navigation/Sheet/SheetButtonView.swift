@@ -52,3 +52,14 @@ public struct SheetButtonView<
     }
 }
 
+public extension SheetButtonView where Data == Void {
+    init(
+        @ViewBuilder trigger: () -> Trigger,
+        @ViewBuilder content: @escaping (SheetContentContext<Void>) -> SheetContent
+    ) {
+        self.initialData = ()
+        self.trigger = trigger()
+        self.content = content
+    }
+}
+
