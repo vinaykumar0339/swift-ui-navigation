@@ -11,8 +11,11 @@ import SwiftUI
 @MainActor
 public struct StackNavigator<Routes: Route>: View {
     
-    @StateObject private var anyStackNavigation: AnyStackNavigation
-    private var stackNavigation: StackNavigation<Routes>
+    @StateObject private var stackNavigation: StackNavigation<Routes>
+    
+    // get current local navigation. to set the parent child relationship
+    @Environment(\.navigation) var navigation
+    @StateObject private var localNavigation: Navigation
     
     var initialScreen: StackScreen<Routes>
     var screenOptionsProvider: ScreenOptionsProvider<Routes>?
@@ -24,10 +27,12 @@ public struct StackNavigator<Routes: Route>: View {
         initialScreen: StackScreen<Routes>,
         screens: [StackScreen<Routes>]
     ) {
-        let anyStackNavigation = AnyStackNavigation()
-        _anyStackNavigation = StateObject(wrappedValue: anyStackNavigation)
         
-        self.stackNavigation = StackNavigation<Routes>(anyStackNavigation)
+        let stackNavigation = StackNavigation<Routes>()
+        _stackNavigation = StateObject(wrappedValue: stackNavigation)
+        
+        let localNavigation = Navigation(navigator: stackNavigation)
+        _localNavigation = StateObject(wrappedValue: localNavigation)
         
         self.initialScreen = initialScreen
         self.screenOptionsProvider = nil
@@ -39,10 +44,12 @@ public struct StackNavigator<Routes: Route>: View {
         screenOptions: ScreenOptions? = nil,
         screens: [StackScreen<Routes>]
     ) {
-        let anyStackNavigation = AnyStackNavigation()
-        _anyStackNavigation = StateObject(wrappedValue: anyStackNavigation)
         
-        self.stackNavigation = StackNavigation<Routes>(anyStackNavigation)
+        let stackNavigation = StackNavigation<Routes>()
+        _stackNavigation = StateObject(wrappedValue: stackNavigation)
+        
+        let localNavigation = Navigation(navigator: stackNavigation)
+        _localNavigation = StateObject(wrappedValue: localNavigation)
         
         self.initialScreen = initialScreen
         self.screenOptionsProvider = screenOptions.map({ .constant($0) })
@@ -54,9 +61,13 @@ public struct StackNavigator<Routes: Route>: View {
         screenOptions: ((StackNavigation<Routes>, Routes) -> ScreenOptions?)? = nil,
         screens: [StackScreen<Routes>]
     ) {
-        let anyNavigation = AnyStackNavigation()
-        _anyStackNavigation = StateObject(wrappedValue: anyNavigation)
-        self.stackNavigation = StackNavigation<Routes>(anyNavigation)
+        
+        let stackNavigation = StackNavigation<Routes>()
+        _stackNavigation = StateObject(wrappedValue: stackNavigation)
+        
+        let localNavigation = Navigation(navigator: stackNavigation)
+        _localNavigation = StateObject(wrappedValue: localNavigation)
+        
         self.initialScreen = initialScreen
         self.screenOptionsProvider = screenOptions.map({ .dynamic($0) })
         self.stackScreens = screens
@@ -153,12 +164,12 @@ public struct StackNavigator<Routes: Route>: View {
     }
     
     public var body: some View {
-        NavigationStack(path: $anyStackNavigation.routes) {
+        NavigationStack(path: $stackNavigation.routes) {
             renderInitialScreen(for: initialScreen)
-                .onReceive(anyStackNavigation.currentScreenOptionsState.$options, perform: { output in
+                .onReceive(stackNavigation.currentScreenOptionsState.$options, perform: { output in
                     screenOptions = output
                 })
-                .navigationDestination(for: AnyRoute.self) { route in
+                .navigationDestination(for: Routes.self) { route in
                     renderScreen(for: route)
                     .toolbar {
                         toolbarLeftViewContent()
@@ -170,7 +181,11 @@ public struct StackNavigator<Routes: Route>: View {
                     toolbarRightViewContent()
                 }
         }
-        .environmentObject(anyStackNavigation)
+        .onAppear {
+            // TODO: Check this can be moved to init, as environment variable can't be accessed in the init
+            localNavigation.setParent(navigation)
+        }
+        .environment(\.navigation, localNavigation)
     }
     
     @ViewBuilder

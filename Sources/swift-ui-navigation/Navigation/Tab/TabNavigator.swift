@@ -11,8 +11,11 @@ import SwiftUI
 @MainActor
 public struct TabNavigator<Routes: Route>: View {
     
-    @StateObject private var anyTabNavigation: AnyTabNavigation
-    private var tabNavigation: TabNavigation<Routes>
+    @StateObject private var tabNavigation: TabNavigation<Routes>
+    
+    // get current local navigation. to set the parent child relationship
+    @Environment(\.navigation) var navigation
+    @StateObject private var localNavigation: Navigation
     
     var initialRoute: Routes
     var tabOptionsProvider: TabOptionsProvider<Routes>?
@@ -23,10 +26,11 @@ public struct TabNavigator<Routes: Route>: View {
         tabScreens: [TabScreen<Routes>]
     ) {
         
-        let anyTabNavigation = AnyTabNavigation(selectedRoute: AnyRoute(initialRoute))
-        _anyTabNavigation = StateObject(wrappedValue: anyTabNavigation)
+        let tabNavigation = TabNavigation<Routes>(selectedRoute: initialRoute)
+        _tabNavigation = StateObject(wrappedValue: tabNavigation)
         
-        self.tabNavigation = TabNavigation(anyTabNavigation)
+        let localNavigation = Navigation(navigator: tabNavigation)
+        _localNavigation = StateObject(wrappedValue: localNavigation)
         
         self.initialRoute = initialRoute
         self.tabOptionsProvider = nil
@@ -39,10 +43,11 @@ public struct TabNavigator<Routes: Route>: View {
         tabScreens: [TabScreen<Routes>]
     ) {
         
-        let anyTabNavigation = AnyTabNavigation(selectedRoute: AnyRoute(initialRoute))
-        _anyTabNavigation = StateObject(wrappedValue: anyTabNavigation)
+        let tabNavigation = TabNavigation<Routes>(selectedRoute: initialRoute)
+        _tabNavigation = StateObject(wrappedValue: tabNavigation)
         
-        self.tabNavigation = TabNavigation(anyTabNavigation)
+        let localNavigation = Navigation(navigator: tabNavigation)
+        _localNavigation = StateObject(wrappedValue: localNavigation)
         
         self.initialRoute = initialRoute
         self.tabOptionsProvider = tabOptions.map({.constant($0)})
@@ -55,10 +60,11 @@ public struct TabNavigator<Routes: Route>: View {
         tabScreens: [TabScreen<Routes>]
     ) {
         
-        let anyTabNavigation = AnyTabNavigation(selectedRoute: AnyRoute(initialRoute))
-        _anyTabNavigation = StateObject(wrappedValue: anyTabNavigation)
+        let tabNavigation = TabNavigation<Routes>(selectedRoute: initialRoute)
+        _tabNavigation = StateObject(wrappedValue: tabNavigation)
         
-        self.tabNavigation = TabNavigation(anyTabNavigation)
+        let localNavigation = Navigation(navigator: tabNavigation)
+        _localNavigation = StateObject(wrappedValue: localNavigation)
         
         self.initialRoute = initialRoute
         self.tabOptionsProvider = tabOptions.map({.dynamic($0)})
@@ -76,9 +82,9 @@ public struct TabNavigator<Routes: Route>: View {
     }
     
     public var body: some View {
-        TabView(selection: $anyTabNavigation.selectedRoute) {
+        TabView(selection: $tabNavigation.selectedRoute) {
             ForEach(Array(tabScreens.enumerated()), id: \.offset) { _, tab in
-                let isRouteSelected = tab.route.name == anyTabNavigation.selectedRoute?.name
+                let isRouteSelected = tab.route.name == tabNavigation.selectedRoute?.name
                 TabScreenView(
                     tabScreen: tab,
                     tabOptions: getTabOptions(tab.route, isRouteSelected),
@@ -87,7 +93,11 @@ public struct TabNavigator<Routes: Route>: View {
                 )
             }
         }
-        .environmentObject(anyTabNavigation)
+        .onAppear {
+            // TODO: Check this can be moved to init, as environment variable can't be accessed in the init
+            localNavigation.setParent(navigation)
+        }
+        .environment(\.navigation, localNavigation)
     }
     
     
