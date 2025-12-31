@@ -9,7 +9,6 @@ import Foundation
 import SwiftUI
 
 struct NavigationKey: @preconcurrency EnvironmentKey {
-    // TODO: Need to remove this AnyStackNavigation later. of the start init.
     @MainActor static let defaultValue: Navigation = .init()
 }
 

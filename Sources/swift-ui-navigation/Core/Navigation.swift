@@ -43,22 +43,29 @@ public class Navigation: ObservableObject {
         self.navigator = navigator
     }
     
-    public func setParent(_ parent: Navigation) {
+    func setParent(_ parent: Navigation) {
         self.parent = parent
     }
     
-    // TODO: need to rethink this navigate method for complex nested routes.
-    public func navigate<Routes: Route>(to route: Routes) {
+    @discardableResult
+    func navigateInternal<Routes: Route>(to route: Routes) -> Bool {
         if let stackNavigation = navigator as? StackNavigation<Routes> {
-            return stackNavigation.navigate(to: route)
+            stackNavigation.navigate(to: route)
+            return true
         } else if let tabNavigation = navigator as? TabNavigation<Routes> {
-            return tabNavigation.navigate(to: route)
-        } // here we can tell to the parent to handle if not handled by the current navigator
+            tabNavigation.navigate(to: route)
+            return true
+        }
         else if let parent {
-            return parent.navigate(to: route)
+            return parent.navigateInternal(to: route)
         } else {
             print("not handled by current navigator. check your route configuration")
+            return false
         }
+    }
+    
+    public func navigate<Routes: Route>(to route: Routes) {
+        navigateInternal(to: route)
     }
     
     public func pop() {
