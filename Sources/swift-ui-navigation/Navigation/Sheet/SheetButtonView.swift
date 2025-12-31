@@ -20,13 +20,17 @@ public struct SheetButtonView<
     private let content: (SheetContentContext<Data>) -> SheetContent
 
     @State private var activeSheet: SheetItem<Data>?
+    
+    private let configuration: SheetConfiguration
 
     public init(
         data: Data,
+        configuration: SheetConfiguration = .init(),
         @ViewBuilder trigger: () -> Trigger,
         @ViewBuilder content: @escaping (SheetContentContext<Data>) -> SheetContent
     ) {
         self.initialData = data
+        self.configuration = configuration
         self.trigger = trigger()
         self.content = content
     }
@@ -37,7 +41,10 @@ public struct SheetButtonView<
         } label: {
             trigger
         }
-        .sheet(item: $activeSheet) { item in
+        .sheet(
+            item: $activeSheet,
+            onDismiss: configuration.onDismiss
+        ) { item in
             content((
                 item: item,
                 isPresenting: true,
@@ -48,16 +55,19 @@ public struct SheetButtonView<
                     activeSheet = SheetItem(data: newData)
                 }
             ))
+            .applySheetConfiguration(configuration)
         }
     }
 }
 
 public extension SheetButtonView where Data == Void {
     init(
+        configuration: SheetConfiguration = .init(),
         @ViewBuilder trigger: () -> Trigger,
         @ViewBuilder content: @escaping (SheetContentContext<Void>) -> SheetContent
     ) {
         self.initialData = ()
+        self.configuration = configuration
         self.trigger = trigger()
         self.content = content
     }
