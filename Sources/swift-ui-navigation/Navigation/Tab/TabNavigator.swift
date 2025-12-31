@@ -13,8 +13,7 @@ public struct TabNavigator<Routes: Route>: View {
     
     @StateObject private var tabNavigation: TabNavigation<Routes>
     
-    // get current local navigation. to set the parent child relationship
-    @Environment(\.navigation) var navigation
+    @Environment(\.navigation) var parentNavigation
     @StateObject private var localNavigation: Navigation
     
     var initialRoute: Routes
@@ -95,7 +94,7 @@ public struct TabNavigator<Routes: Route>: View {
         }
         .onAppear {
             // TODO: Check this can be moved to init, as environment variable can't be accessed in the init
-            localNavigation.setParent(navigation)
+            localNavigation.setParent(parentNavigation)
         }
         .environment(\.navigation, localNavigation)
     }
