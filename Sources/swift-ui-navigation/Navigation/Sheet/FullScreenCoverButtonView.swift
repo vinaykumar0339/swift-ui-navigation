@@ -8,7 +8,7 @@
 import Foundation
 import SwiftUI
 
-// MARK: - SheetButtonView
+// MARK: - FullScreenCoverButtonView
 public struct FullScreenCoverButtonView<
     Trigger: View,
     SheetContent: View,
@@ -37,7 +37,7 @@ public struct FullScreenCoverButtonView<
         } label: {
             trigger
         }
-        .sheet(item: $activeSheet) { item in
+        .fullScreenCover(item: $activeSheet) { item in
             content((
                 item: item,
                 isPresenting: true,
@@ -50,5 +50,18 @@ public struct FullScreenCoverButtonView<
             ))
         }
     }
+}
+
+public extension FullScreenCoverButtonView where Data == Void {
+    
+    init (
+        @ViewBuilder trigger: () -> Trigger,
+        @ViewBuilder content: @escaping (SheetContentContext<Void>) -> SheetContent
+    ) {
+        self.initialData = ()
+        self.trigger = trigger()
+        self.content = content
+    }
+    
 }
 
