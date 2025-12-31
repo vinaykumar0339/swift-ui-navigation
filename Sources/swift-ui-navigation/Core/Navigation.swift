@@ -68,6 +68,22 @@ public class Navigation: ObservableObject {
         navigateInternal(to: route)
     }
     
+    /// push the new screen from the closest navigation
+    /// Route should be valid route to resolve the current local stack or tab navigation. ignore the navigation
+    /// if not able to find the current closest navigation is not able to resolve the route.
+    public func push<Routes: Route>(route: Routes) {
+        if let stackNavigation = navigator as? StackNavigation<Routes> {
+            stackNavigation.navigate(to: route)
+        } else if let tabNavigation = navigator as? TabNavigation<Routes> {
+            tabNavigation.navigate(to: route)
+        } else {
+            print("\(route) of type \(Routes.self) is not able to handle by the current navigator \(String(describing: navigator)). check your route configuration")
+        }
+    }
+    
+    /// pop the current screen.
+    /// if the local navigator is not able to handle then it bubble up till root navigation.
+    /// if none of the navigator handles then it ignores the navigation.
     public func pop() {
         guard let navigator else {
             return
@@ -81,6 +97,9 @@ public class Navigation: ObservableObject {
         }
     }
     
+    /// pop to the first screen of the navigation.
+    /// if the local navigator is not able to handle then it bubble up till root navigation.
+    /// if none of the navigator handles then it ignores the navigation.
     public func popToTop() {
         guard let navigator else {
             return
@@ -94,6 +113,8 @@ public class Navigation: ObservableObject {
         }
     }
     
+    /// check if any navigation can handle the go back.
+    /// this also bubble up till the root navigation if the local navigation not able to handle.
     public func canGoBack() -> Bool {
         guard let navigator else {
             return false
@@ -104,6 +125,8 @@ public class Navigation: ObservableObject {
         return parent?.canGoBack() ?? false
     }
     
+    /// go back n times in the navigation.
+    /// this also bubble up till the root navigation if the local navigation not able to handle.
     public func goBack(_ times: Int = 1) {
         guard times > 0 else {
             print("times should be less than 1")

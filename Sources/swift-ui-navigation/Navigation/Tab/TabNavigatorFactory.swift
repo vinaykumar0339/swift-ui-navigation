@@ -20,7 +20,7 @@ public struct TabNavigatorFactory<Routes: Route> {
     
     public func Screen(
         route: Routes,
-        @ViewBuilder content: @escaping (TabNavigation<Routes>, any Route) -> some View
+        @ViewBuilder content: @escaping (TabNavigation<Routes>, Routes) -> some View
     ) -> TabScreen<Routes> {
         TabScreen(
             route,
@@ -31,7 +31,7 @@ public struct TabNavigatorFactory<Routes: Route> {
     public func Screen(
         route: Routes,
         options: TabOptions? = nil,
-        @ViewBuilder content: @escaping (TabNavigation<Routes>, any Route) -> some View
+        @ViewBuilder content: @escaping (TabNavigation<Routes>, Routes) -> some View
     ) -> TabScreen<Routes> {
         TabScreen(
             route,
@@ -43,7 +43,7 @@ public struct TabNavigatorFactory<Routes: Route> {
     public func Screen(
         route: Routes,
         options: ((TabNavigation<Routes>, Routes, _ isRouteSelected: Bool) -> TabOptions?)? = nil,
-        @ViewBuilder content: @escaping (TabNavigation<Routes>, any Route) -> some View
+        @ViewBuilder content: @escaping (TabNavigation<Routes>, Routes) -> some View
     ) -> TabScreen<Routes> {
         TabScreen(
             route,

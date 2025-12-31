@@ -13,11 +13,11 @@ public struct StackScreen<Routes: Route> {
     
     let route: Routes
     let optionsProvider: ScreenOptionsProvider<Routes>?
-    let build: (StackNavigation<Routes>, any Route) -> AnyView
+    let build: (StackNavigation<Routes>, Routes) -> AnyView
     
     public init<Content: View>(
         _ route: Routes,
-        @ViewBuilder content: @escaping (StackNavigation<Routes>, any Route) -> Content
+        @ViewBuilder content: @escaping (StackNavigation<Routes>, Routes) -> Content
     ) {
         self.route = route
         self.optionsProvider = nil
@@ -29,7 +29,7 @@ public struct StackScreen<Routes: Route> {
     public init<Content: View>(
         _ route: Routes,
         _ options: ScreenOptions? = nil,
-        @ViewBuilder content: @escaping (StackNavigation<Routes>, any Route) -> Content
+        @ViewBuilder content: @escaping (StackNavigation<Routes>, Routes) -> Content
     ) {
         self.route = route
         self.optionsProvider = options.map({ .constant($0) })
@@ -41,7 +41,7 @@ public struct StackScreen<Routes: Route> {
     public init<Content: View>(
         _ route: Routes,
         _ options: ((StackNavigation<Routes>, Routes) -> ScreenOptions?)? = nil,
-        @ViewBuilder content: @escaping (StackNavigation<Routes>, any Route) -> Content
+        @ViewBuilder content: @escaping (StackNavigation<Routes>, Routes) -> Content
     ) {
         self.route = route
         self.optionsProvider = options.map({ .dynamic($0) })

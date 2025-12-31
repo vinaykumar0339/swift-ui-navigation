@@ -197,7 +197,7 @@ public struct StackNavigator<Routes: Route>: View {
     }
     
     @ViewBuilder
-    private func renderScreen(for route: any Route) -> some View {
+    private func renderScreen(for route: Routes) -> some View {
         if let screen = stackScreens.first(where: { $0.route.name == route.name }) {
             StackScreenView(
                 screen: screen,

@@ -13,11 +13,11 @@ public struct TabScreen<Routes: Route> {
     
     let route: Routes
     let optionsProvider: TabOptionsProvider<Routes>?
-    let build: (TabNavigation<Routes>, any Route) -> AnyView
+    let build: (TabNavigation<Routes>, Routes) -> AnyView
     
     public init<Content: View>(
         _ route: Routes,
-        @ViewBuilder content: @escaping (TabNavigation<Routes>, any Route) -> Content
+        @ViewBuilder content: @escaping (TabNavigation<Routes>, Routes) -> Content
     ) {
         self.route = route
         self.optionsProvider = nil
@@ -29,7 +29,7 @@ public struct TabScreen<Routes: Route> {
     public init<Content: View>(
         _ route: Routes,
         _ options: TabOptions? = nil,
-        @ViewBuilder content: @escaping (TabNavigation<Routes>, any Route) -> Content
+        @ViewBuilder content: @escaping (TabNavigation<Routes>, Routes) -> Content
     ) {
         self.route = route
         self.optionsProvider = options.map({.constant($0)})
@@ -41,7 +41,7 @@ public struct TabScreen<Routes: Route> {
     public init<Content: View>(
         _ route: Routes,
         _ options: ((TabNavigation<Routes>, Routes, _ isRouteSelected: Bool) -> TabOptions?)? = nil,
-        @ViewBuilder content: @escaping (TabNavigation<Routes>, any Route) -> Content
+        @ViewBuilder content: @escaping (TabNavigation<Routes>, Routes) -> Content
     ) {
         self.route = route
         self.optionsProvider = options.map({ .dynamic($0) })
